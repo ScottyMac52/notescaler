@@ -7,6 +7,28 @@ namespace NoteScaler
 
 	public class MusicNote
 	{
+		#region Constants
+
+		private const int RELATIVE_MINOR_POSITION = 5;
+		private const int RELATIVE_MAJOR_POSITION = 2;
+		private const int FIRST = 0;
+		private const int THIRD = 2;
+		private const int FIFTH = 4;
+		private const int SEVENTH = 6;
+		private const int NINTH = 1;
+		private const int ELEVENTH = 3;
+		private const int THIRTEENTH = 5;
+		private const int FIFTEENTH = 7;
+		private const string B_NOTE = "B";
+		private const string E_NOTE = "E";
+		private const string WHOLE_STEP = "W";
+		private const string HALF_STEP = "H";
+		private const string SHARP_NOTE = "#";
+		private const string FLAT_NOTE = "b";
+		private const char Separator = ',';
+
+		#endregion Constants
+
 		#region private static data
 		/// <summary>
 		/// Base scale using flats
@@ -21,12 +43,12 @@ namespace NoteScaler
 		/// <summary>
 		/// Pattern for Major scale
 		/// </summary>
-		private static readonly string MAJOR_SCALE = "W,W,H,W,W,W,H";
+		private static readonly string MAJOR_SCALE = $"{WHOLE_STEP},{WHOLE_STEP},{HALF_STEP},{WHOLE_STEP},{WHOLE_STEP},{WHOLE_STEP},{HALF_STEP}";
 
 		/// <summary>
 		/// Pattern for minor scale
 		/// </summary>
-		private static readonly string MINOR_SCALE = "W,H,W,W,H,W,W";
+		private static readonly string MINOR_SCALE = $"{WHOLE_STEP},{HALF_STEP},{WHOLE_STEP},{WHOLE_STEP},{HALF_STEP},{WHOLE_STEP},{WHOLE_STEP}";
 
 		#endregion private static data
 
@@ -40,7 +62,7 @@ namespace NoteScaler
 		/// <summary>
 		/// Tone type derived from Note
 		/// </summary>
-		public ToneTypes ToneType { get; }
+		public ToneTypes ToneType { get; private set; }
 		
 		/// <summary>
 		/// Set of flat notes and natural notes in this key
@@ -76,17 +98,17 @@ namespace NoteScaler
 		/// <summary>
 		/// Is this a natural key/note?
 		/// </summary>
-		public bool IsNatural => !Key.EndsWith("#") && !Key.EndsWith("b");
+		public bool IsNatural => !Key.EndsWith(SHARP_NOTE) && !Key.EndsWith(FLAT_NOTE);
 		
 		/// <summary>
 		/// Is this a flat key/note?
 		/// </summary>
-		public bool IsFlat => Key.EndsWith("b");
+		public bool IsFlat => Key.EndsWith(FLAT_NOTE);
 
 		/// <summary>
 		/// Is this a sharp key/note?
 		/// </summary>
-		public bool IsSharp => Key.EndsWith("#");
+		public bool IsSharp => Key.EndsWith(SHARP_NOTE);
 		#endregion Key melodic properties
 
 		#region Note positions in note scale
@@ -129,7 +151,7 @@ namespace NoteScaler
 		#region Chords for Key
 
 		/// <summary>
-		/// Major Chrod out to 15th degree
+		/// Major Chord out to 15th degree
 		/// </summary>
 		public string[] MajorChord => GetMajorChord();
 
@@ -159,20 +181,7 @@ namespace NoteScaler
 		/// <param name="note"></param>
 		public MusicNote(string note)
 		{
-			if(note.EndsWith("#"))
-			{
-				ToneType = ToneTypes.Sharp;
-			}
-			else if(note.EndsWith("b"))
-			{
-				ToneType = ToneTypes.Flat;
-			}
-			else
-			{
-				ToneType = ToneTypes.Natural;
-			}
 			Key = note;
-
 			InitializeNote();
 		}
 
@@ -196,6 +205,18 @@ namespace NoteScaler
 
 		private void InitializeNote()
 		{
+			if (Key.EndsWith(SHARP_NOTE))
+			{
+				ToneType = ToneTypes.Sharp;
+			}
+			else if(Key.EndsWith(FLAT_NOTE))
+			{
+				ToneType = ToneTypes.Flat;
+			}
+			else
+			{
+				ToneType = ToneTypes.Natural;
+			}
 			var sharpNotes = NotesSharp.ToList();
 			var flatNotes = NotesFlat.ToList();
 			var currentSharpNoteIndex = sharpNotes.IndexOf(Key);
@@ -226,11 +247,11 @@ namespace NoteScaler
 
 			if (!forMajor)
 			{
-				targetKey = MajorScale.ElementAt(5).Key;
+				targetKey = MajorScale.ElementAt(RELATIVE_MINOR_POSITION).Key;
 			}
 			else
 			{
-				targetKey = RelativeMinor.MinorScale.ElementAt(2).Key;
+				targetKey = RelativeMinor.MinorScale.ElementAt(RELATIVE_MAJOR_POSITION).Key;
 			}
 			var newMusicNote = new MusicNote(targetKey);
 			return newMusicNote;
@@ -294,29 +315,26 @@ namespace NoteScaler
 		{
 			List<string> chordsForNote = new List<string>();
 			var noteList = GetNoteList(true).ToList();
-			chordsForNote.Add(noteList[0]);
-			chordsForNote.Add(noteList[2]);
-			chordsForNote.Add(noteList[4]);
-			chordsForNote.Add(noteList[6]);
-			chordsForNote.Add(noteList[1]);
-			chordsForNote.Add(noteList[3]);
-			chordsForNote.Add(noteList[5]);
-			chordsForNote.Add(noteList[7]);
-			return chordsForNote.ToArray();
+			return FillNotes(chordsForNote, noteList);
 		}
 
 		private string[] GetMinorChord()
 		{
 			List<string> chordsForNote = new List<string>();
 			var noteList = GetNoteList(true, true).ToList();
-			chordsForNote.Add(noteList[0]);
-			chordsForNote.Add(noteList[2]);
-			chordsForNote.Add(noteList[4]);
-			chordsForNote.Add(noteList[6]);
-			chordsForNote.Add(noteList[1]);
-			chordsForNote.Add(noteList[3]);
-			chordsForNote.Add(noteList[5]);
-			chordsForNote.Add(noteList[7]);
+			return FillNotes(chordsForNote, noteList);
+		}
+
+		private static string[] FillNotes(List<string> chordsForNote, List<string> noteList)
+		{
+			chordsForNote.Add(noteList[FIRST]);
+			chordsForNote.Add(noteList[THIRD]);
+			chordsForNote.Add(noteList[FIFTH]);
+			chordsForNote.Add(noteList[SEVENTH]);
+			chordsForNote.Add(noteList[NINTH]);
+			chordsForNote.Add(noteList[ELEVENTH]);
+			chordsForNote.Add(noteList[THIRTEENTH]);
+			chordsForNote.Add(noteList[FIFTEENTH]);
 			return chordsForNote.ToArray();
 		}
 
@@ -357,17 +375,17 @@ namespace NoteScaler
 
 			int currentNotesInScale = 0;
 			int notesCounted = 0;
-			var currentScale = MAJOR_SCALE.Split(',');
+			var currentScale = MAJOR_SCALE.Split(Separator);
 			if (!isMajor)
 			{
-				currentScale = MINOR_SCALE.Split(',');
+				currentScale = MINOR_SCALE.Split(Separator);
 			}
 			noteList.Add(Key);
 			string lastNote = null;
 			while (noteList.Count() < 8)
 			{
 				int index = 1;
-				if (currentScale[currentNotesInScale] == "W" && (scaleNotes[notesCounted] != "B" || scaleNotes[notesCounted] != "E"))
+				if (currentScale[currentNotesInScale] == WHOLE_STEP && (scaleNotes[notesCounted] != B_NOTE || scaleNotes[notesCounted] != E_NOTE))
 				{
 					index = 2;
 				}
