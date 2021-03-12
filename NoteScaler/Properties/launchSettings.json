@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NoteScaler": {
+      "commandName": "Project",
+      "commandLineArgs": "F#"
+    }
+  }
+}
