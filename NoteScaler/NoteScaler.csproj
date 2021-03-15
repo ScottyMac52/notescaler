@@ -6,6 +6,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Songs\amazinggrace.json" />
+    <None Remove="Songs\AMinorScale.json" />
+    <None Remove="Songs\CMajorScale.json" />
+    <None Remove="Songs\IonianCScale.json" />
+    <None Remove="Songs\maryhadalittlelamb.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Songs\AMinorScale.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Songs\IonianCScale.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Songs\CMajorScale.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Songs\amazinggrace.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Songs\maryhadalittlelamb.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
   </ItemGroup>
 

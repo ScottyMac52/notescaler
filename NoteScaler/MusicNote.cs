@@ -1,5 +1,4 @@
-﻿
-namespace NoteScaler
+﻿namespace NoteScaler
 {
 	using System;
 	using System.Collections.Generic;
@@ -20,6 +19,7 @@ namespace NoteScaler
 		private const int THIRTEENTH = 5;
 		private const int FIFTEENTH = 7;
 		private const string B_NOTE = "B";
+		private const string C_NOTE = "C";
 		private const string E_NOTE = "E";
 		private const string WHOLE_STEP = "W";
 		private const string HALF_STEP = "H";
@@ -30,15 +30,21 @@ namespace NoteScaler
 		#endregion Constants
 
 		#region private static data
+
+		/// <summary>
+		/// Multiplier for notes away from A4
+		/// </summary>
+		private static readonly double NOTE_REF = 1.059463;
+
 		/// <summary>
 		/// Base scale using flats
 		/// </summary>
-		private static readonly string[] NotesFlat = new string[] { "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A" };
+		private static readonly string[] NotesFlat = new string[] { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B", "C" };
 
 		/// <summary>
 		/// Base scale using sharps
 		/// </summary>
-		private static readonly string[] NotesSharp = new string[] { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A" };
+		private static readonly string[] NotesSharp = new string[] { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C" };
 
 		/// <summary>
 		/// Pattern for Major scale
@@ -52,12 +58,34 @@ namespace NoteScaler
 
 		#endregion private static data
 
+		#region private data
+		private int desiredOctave = 0;
+		private IEnumerable<string> minorScale;
+		private IEnumerable<string> relativeMinorScale;
+		private IEnumerable<string> majorScale;
+		private string relativeMinor;
+		private string relativeMajor;
+		private string noteBefore;
+		private string noteAfter;
+		private string minorNoteBefore;
+		private string minorNoteAfter;
+		private string majorNoteBefore;
+		private string majorNoteAfter;
+		private string[] majorChord;
+		private string[] minorChord;
+		#endregion private data
+
 		#region public properties
 
 		/// <summary>
 		/// Name of the note
 		/// </summary>
 		public string Key { get; set; }
+
+		/// <summary>
+		/// The frequency of the A4 note 
+		/// </summary>
+		public int Reference { get; set; }
 
 		/// <summary>
 		/// Tone type derived from Note
@@ -70,58 +98,88 @@ namespace NoteScaler
 		public IEnumerable<string> FlatNotes { get; private set; }
 
 		/// <summary>
+		/// Frequencies for this note in each Octave
+		/// </summary>
+		public float[] Frequencies { get; set; }
+
+		/// <summary>
 		/// Set of sharp notes and natural notes in this key
 		/// </summary>
 		public IEnumerable<string> SharpNotes { get; private set; }
 
 		/// <summary>
-		/// Relative minor note to this key
+		/// How long to play the note for
 		/// </summary>
-		public MusicNote RelativeMinor => GetRelativeKey(false);
+		public int Duration { get; set; }
 
 		/// <summary>
-		/// Get the relative major to the minor key, should be this key!
+		/// Instrument used to play the note
 		/// </summary>
-		public MusicNote RelativeMajor => GetRelativeKey(true);
-
-		/// <summary>
-		/// Major scale for the current Key
-		/// </summary>
-		public IEnumerable<MusicNote> MajorScale => GetMajorScale().Select(note => new MusicNote(note));
-
-		/// <summary>
-		/// minor scale for the current Key
-		/// </summary>
-		public IEnumerable<MusicNote> MinorScale => GetMinorScale().Select(note => new MusicNote(note));
+		public InstrumentType Instrument { get; set; }
 
 		#region Key melodic properties
 		/// <summary>
 		/// Is this a natural key/note?
 		/// </summary>
-		public bool IsNatural => !Key.EndsWith(SHARP_NOTE) && !Key.EndsWith(FLAT_NOTE);
+		public bool IsNatural => !Key.Contains(SHARP_NOTE) && !Key.Contains(FLAT_NOTE);
 		
 		/// <summary>
 		/// Is this a flat key/note?
 		/// </summary>
-		public bool IsFlat => Key.EndsWith(FLAT_NOTE);
+		public bool IsFlat => Key.Contains(FLAT_NOTE);
 
 		/// <summary>
 		/// Is this a sharp key/note?
 		/// </summary>
-		public bool IsSharp => Key.EndsWith(SHARP_NOTE);
+		public bool IsSharp => Key.Contains(SHARP_NOTE);
+
+		/// <summary>
+		/// The octave desired when this note is played
+		/// </summary>
+		public int DesiredOctave => desiredOctave;
+
+		/// <summary>
+		/// Interface for playing notes
+		/// </summary>
+		public INotePlayer NotePlayer { get; set; }
+
 		#endregion Key melodic properties
 
+		#region Scale data
+
+		/// <summary>
+		/// Relative minor note to this key
+		/// </summary>
+		public string RelativeMinor => relativeMinor;
+
+		/// <summary>
+		/// Get the relative major to the minor key, should be this key!
+		/// </summary>
+		public string RelativeMajor => relativeMajor;
+
+		/// <summary>
+		/// Major scale for the current Key
+		/// </summary>
+		public IEnumerable<string> MajorScale => majorScale;
+
+		/// <summary>
+		/// minor scale for the current Key
+		/// </summary>
+		public IEnumerable<string> MinorScale => minorScale;
+
+		#endregion Scale data
+
 		#region Note positions in note scale
-		
+
 		/// <summary>
 		/// Key before this one
 		/// </summary>
-		public MusicNote NoteBefore => GetNoteBefore(false);
+		public string NoteBefore => noteBefore;
 
 		/// <summary>
 		/// Key after this one
 		/// </summary>
-		public MusicNote NoteAfter => GetNoteAfter(false);
+		public string NoteAfter => noteAfter;
 
 		#endregion Note positions in note scale
 
@@ -130,22 +188,22 @@ namespace NoteScaler
 		/// <summary>
 		/// Major scale note before this one in key
 		/// </summary>
-		public MusicNote MajorNoteBefore => GetNoteBefore(true);
+		public string MajorNoteBefore => majorNoteBefore;
 
 		/// <summary>
 		/// Major scale note after this one in key
 		/// </summary>
-		public MusicNote MajorNoteAfter => GetNoteAfter(true);
+		public string MajorNoteAfter => majorNoteAfter;
 
 		/// <summary>
 		/// minor scale note before this one in key
 		/// </summary>
-		public MusicNote MinorNoteBefore => GetNoteBefore(true, true);
+		public string MinorNoteBefore => minorNoteBefore;
 
 		/// <summary>
 		/// minor scale note after this one in key
 		/// </summary>
-		public MusicNote MinorNoteAfter => GetNoteAfter(true, true);
+		public string MinorNoteAfter => minorNoteAfter;
 		#endregion Note positions inside key 
 
 		#region Chords for Key
@@ -153,12 +211,12 @@ namespace NoteScaler
 		/// <summary>
 		/// Major Chord out to 15th degree
 		/// </summary>
-		public string[] MajorChord => GetMajorChord();
+		public string[] MajorChord => majorChord;
 
 		/// <summary>
 		/// Minor Chord out to 15th degree
 		/// </summary>
-		public string[] MinorChord => GetMinorChord();
+		public string[] MinorChord => minorChord;
 
 		#endregion Chords for Key
 
@@ -168,7 +226,7 @@ namespace NoteScaler
 		/// <returns></returns>
 		public override string ToString()
 		{
-			return $"{Key}";
+			return $"{Key}{DesiredOctave}";
 		}
 
 		#endregion public properties
@@ -179,23 +237,39 @@ namespace NoteScaler
 		/// Onlt way to construct a Key for a note
 		/// </summary>
 		/// <param name="note"></param>
-		public MusicNote(string note)
+		/// <param name="a4Reference"></param>
+		/// <param name="player"></param>
+		/// <param name="duration"></param>
+		/// <param name="currentInstrument"></param>
+		public MusicNote(string note, int a4Reference = 440, INotePlayer player = null, int duration = 500, InstrumentType currentInstrument = default)
 		{
 			Key = note;
+			Reference = a4Reference;
+			this.NotePlayer = player;
+			this.Duration = duration;
+			this.Instrument = currentInstrument;
 			InitializeNote();
 		}
 
 		#endregion Ctor
 
 		#region Public methods
+
+		public void PlayNote(int duration)
+		{
+			var frequency = Frequencies[DesiredOctave];
+			Console.WriteLine($"Playing note {this} at {frequency} Hz for {duration}ms as {Instrument}.");
+			NotePlayer?.PlayNote(Frequencies[DesiredOctave], Instrument, duration);
+		}
+
 		public void MakeSharper()
 		{
-			this.Key = NoteAfter.Key;
+			this.Key = NoteAfter;
 			InitializeNote();
 		}
 		public void MakeFlatter()
 		{
-			this.Key = NoteBefore.Key;
+			this.Key = NoteBefore;
 			InitializeNote();
 		}
 
@@ -205,34 +279,20 @@ namespace NoteScaler
 
 		private void InitializeNote()
 		{
-			if (Key.EndsWith(SHARP_NOTE))
-			{
-				ToneType = ToneTypes.Sharp;
-			}
-			else if(Key.EndsWith(FLAT_NOTE))
-			{
-				ToneType = ToneTypes.Flat;
-			}
-			else
-			{
-				ToneType = ToneTypes.Natural;
-			}
-			var sharpNotes = NotesSharp.ToList();
-			var flatNotes = NotesFlat.ToList();
-			var currentSharpNoteIndex = sharpNotes.IndexOf(Key);
-			var currentFlatNoteIndex = flatNotes.IndexOf(Key);
-			int currentNoteIndex = currentSharpNoteIndex == -1 ? currentFlatNoteIndex : currentSharpNoteIndex;
+			SetToneOfNote();
+			AdjustNoteOctave();
+			GetNoteIndex(out List<string> sharpNotes, out List<string> flatNotes, out int currentNoteIndex);
 
 			if (currentNoteIndex > 0)
 			{
 				var takeFlat = flatNotes.Count - currentNoteIndex - 1;
 				var notes = flatNotes.Skip(currentNoteIndex).Take(takeFlat).ToList();
-				notes.AddRange(flatNotes.Take(currentNoteIndex + 1));
+				notes.AddRange(flatNotes.Take(currentNoteIndex + 1).Select(note => $"{note}"));
 				FlatNotes = notes;
-	
+
 				var takeSharp = sharpNotes.Count - currentNoteIndex - 1;
 				notes = sharpNotes.Skip(currentNoteIndex).Take(takeSharp).ToList();
-				notes.AddRange(sharpNotes.Take(currentNoteIndex + 1));
+				notes.AddRange(sharpNotes.Take(currentNoteIndex + 1).Select(note => $"{note}"));
 				SharpNotes = notes;
 			}
 			else
@@ -240,75 +300,138 @@ namespace NoteScaler
 				FlatNotes = flatNotes;
 				SharpNotes = sharpNotes;
 			}
+
+			var frequencyList = GetFrequenciesFromReference().ToArray();
+			Frequencies = new float[]
+			{
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,-4),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,-3),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,-2),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,-1),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,0),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,1),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,2),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,3),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,4),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,5)
+			};
+
+			minorScale = GetMinorScale();
+			majorScale = GetMajorScale();
+			relativeMinor = GetRelativeKey(false);
+			relativeMajor = GetRelativeKey(true);
+			noteBefore = GetNoteBefore(false);
+			noteAfter = GetNoteAfter(false);
+			minorNoteBefore = GetNoteBefore(true, true);
+			minorNoteAfter = GetNoteAfter(true, true);
+			majorNoteBefore = GetNoteBefore(true);
+			majorNoteAfter = GetNoteAfter(true);
+			minorChord = GetMinorChord();
+			majorChord = GetMajorChord();
 		}
-		private MusicNote GetRelativeKey(bool forMajor = false)
+
+		private float[] GetFrequenciesFromReference()
+		{
+			var frequencyList = new float[NotesSharp.Length];
+			var a4Pos = Array.IndexOf(NotesSharp, "A");
+			NotesSharp.ToList().ForEach(note =>
+			{
+				var currentIndex = Array.IndexOf(NotesSharp, note);
+				double index = currentIndex - a4Pos;
+				if (index == 0)
+				{
+					frequencyList[currentIndex] = Reference;
+				}
+				else
+				{
+					frequencyList[currentIndex] = (float)(Reference * Math.Pow(NOTE_REF, index));
+				}
+			});
+			frequencyList[^1] = (float) (Reference * Math.Pow(NOTE_REF, 3));
+			return frequencyList;
+		}
+
+		private void GetNoteIndex(out List<string> sharpNotes, out List<string> flatNotes, out int currentNoteIndex)
+		{
+			sharpNotes = NotesSharp.ToList();
+			flatNotes = NotesFlat.ToList();
+			var currentSharpNoteIndex = sharpNotes.IndexOf(Key);
+			var currentFlatNoteIndex = flatNotes.IndexOf(Key);
+			currentNoteIndex = currentSharpNoteIndex == -1 ? currentFlatNoteIndex : currentSharpNoteIndex;
+			if (currentNoteIndex == -1)
+			{
+				throw new ArgumentException("Unable to find referenced note!", Key);
+			}
+		}
+
+		private void AdjustNoteOctave()
+		{
+			var testKey = Key;
+			if (testKey.Any(ch => char.IsDigit(ch)))
+			{
+				desiredOctave = int.Parse(testKey[^1].ToString());
+				Key = Key.Substring(0, Key.IndexOf(desiredOctave.ToString()));
+			}
+		}
+
+		private void SetToneOfNote()
+		{
+			if (Key.Contains(SHARP_NOTE))
+			{
+				ToneType = ToneTypes.Sharp;
+			}
+			else if (Key.Contains(FLAT_NOTE))
+			{
+				ToneType = ToneTypes.Flat;
+			}
+			else
+			{
+				ToneType = ToneTypes.Natural;
+			}
+		}
+
+		private string GetRelativeKey(bool forMajor = false)
 		{
 			string targetKey;
 
 			if (!forMajor)
 			{
-				targetKey = MajorScale.ElementAt(RELATIVE_MINOR_POSITION).Key;
+				targetKey = MajorScale.ElementAt(RELATIVE_MINOR_POSITION);
 			}
 			else
 			{
-				targetKey = RelativeMinor.MinorScale.ElementAt(RELATIVE_MAJOR_POSITION).Key;
+				targetKey = MajorScale.ElementAt(RELATIVE_MAJOR_POSITION);
 			}
-			var newMusicNote = new MusicNote(targetKey);
-			return newMusicNote;
+			return targetKey;
 		}
 		private IEnumerable<string> GetMajorScale()
 		{
 			// Formula WWHWWWH
-			var scale =  GetScale(true, ToneType == ToneTypes.Flat);
-			return CorrectScales(scale.Select(s => new MusicNote(s))).Select(scale => scale.Key);
+			return GetScale(true, ToneType == ToneTypes.Flat);
 		}
 
 		private IEnumerable<string> GetMinorScale()
 		{
 			// Formula WHWWHWW
-			var scale = GetScale(false, ToneType == ToneTypes.Flat);
-			return CorrectScales(scale.Select(s => new MusicNote(s))).Select(scale => scale.Key);
+			return GetScale(false, ToneType == ToneTypes.Flat);
 		}
 
-		private IEnumerable<MusicNote> CorrectScales(IEnumerable<MusicNote> scale)
-		{
-			var noteList = new List<MusicNote>();
-			noteList.AddRange(scale);
-
-			noteList.GroupBy(scale => scale.Key.First().ToString()).Where(g => g.Count() > 1).Select(g => g.Key).ToList().ForEach(key =>
-			{
-				noteList.Where(s => s.Key.StartsWith(key) && s.Key != Key).ToList().ForEach(note =>
-				{
-					if (IsSharp)
-					{
-						note.MakeFlatter();
-					}
-					else if(IsFlat)
-					{
-						note.MakeSharper();
-					}
-
-				});
-			});
-
-			return noteList;
-		}
-		private MusicNote GetNoteBefore(bool useScale = true, bool useMinorScale = false)
+		private string GetNoteBefore(bool useScale = true, bool useMinorScale = false)
 		{
 			var noteList = GetNoteList(useScale, useMinorScale);
-			var currentPos = Array.FindIndex(noteList.ToArray(), nl => nl.Equals(Key));
+			var currentPos = Array.FindIndex(noteList.ToArray(), nl => nl.Contains(Key));
 			var targetPos = currentPos == 0 ? noteList.Count() - 2 : currentPos - 1;
 			var targetNote = noteList.ElementAt(targetPos);
-			return new MusicNote(targetNote);
+			return targetNote;
 		}
 
-		private MusicNote GetNoteAfter(bool useScale = true, bool useMinorScale = false)
+		private string GetNoteAfter(bool useScale = true, bool useMinorScale = false)
 		{
 			var noteList = GetNoteList(useScale, useMinorScale);
-			var currentPos = Array.FindIndex(noteList.ToArray(), nl => nl.Equals(Key));
+			var currentPos = Array.FindIndex(noteList.ToArray(), nl => nl.Contains(Key));
 			var targetPos = currentPos == 12 ? 0 : currentPos + 1;
 			var targetNote = noteList.ElementAt(targetPos);
-			return new MusicNote(targetNote);
+			return targetNote;
 		}
 
 		private string[] GetMajorChord()
@@ -345,11 +468,11 @@ namespace NoteScaler
 			{
 				if (useMinorScale)
 				{
-					noteList = GetMinorScale();
+					noteList = minorScale;
 				}
 				else
 				{
-					noteList = GetMajorScale();
+					noteList = majorScale;
 				}
 			}
 			else
@@ -363,6 +486,7 @@ namespace NoteScaler
 		private IEnumerable<string> GetScale(bool isMajor = true, bool useFlats = false)
 		{
 			List<string> scaleNotes;
+			int currentOctave = 0;
 			var noteList = new List<string>();
 			if (useFlats)
 			{
@@ -380,7 +504,7 @@ namespace NoteScaler
 			{
 				currentScale = MINOR_SCALE.Split(Separator);
 			}
-			noteList.Add(Key);
+			noteList.Add($"{Key}{currentOctave}");
 			string lastNote = null;
 			while (noteList.Count() < 8)
 			{
@@ -391,7 +515,8 @@ namespace NoteScaler
 				}
 				notesCounted += index;
 				var newNote = scaleNotes.ElementAt(notesCounted);
-				if((lastNote?.Length ?? 0) > 1 && (lastNote?.StartsWith(newNote[0]) ?? false))
+				/*
+				if((lastNote?.Length ?? 0) > 0 && (lastNote?.Contains(newNote[0]) ?? false))
 				{
 					if(useFlats)
 					{
@@ -402,7 +527,12 @@ namespace NoteScaler
 						newNote = FlatNotes.ElementAt(notesCounted);
 					}
 				}
-				noteList.Add(newNote);
+				*/
+				if(newNote.Contains(C_NOTE) && currentOctave == 0)
+				{
+					currentOctave++;
+				}
+				noteList.Add($"{newNote}{currentOctave}");
 				lastNote = newNote;
 				currentNotesInScale++;
 			}
