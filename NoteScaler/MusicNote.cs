@@ -257,6 +257,10 @@
 
 		public void PlayNote(int duration)
 		{
+			if(DesiredOctave > Frequencies.Count() -1)
+			{
+				throw new ArgumentException($"{DesiredOctave} is too high of an Octave to play {Key}", nameof(DesiredOctave));
+			}
 			var frequency = Frequencies[DesiredOctave];
 			Console.WriteLine($"Playing note {this} at {frequency} Hz for {duration}ms as {Instrument}.");
 			NotePlayer?.PlayNote(Frequencies[DesiredOctave], Instrument, duration);
@@ -313,7 +317,9 @@
 				frequencyList[currentNoteIndex]*(float) Math.Pow(2,2),
 				frequencyList[currentNoteIndex]*(float) Math.Pow(2,3),
 				frequencyList[currentNoteIndex]*(float) Math.Pow(2,4),
-				frequencyList[currentNoteIndex]*(float) Math.Pow(2,5)
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,5),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,6),
+				frequencyList[currentNoteIndex]*(float) Math.Pow(2,7)
 			};
 
 			minorScale = GetMinorScale();
@@ -369,8 +375,10 @@
 			var testKey = Key;
 			if (testKey.Any(ch => char.IsDigit(ch)))
 			{
-				desiredOctave = int.Parse(testKey[^1].ToString());
-				Key = Key.Substring(0, Key.IndexOf(desiredOctave.ToString()));
+				var rawNote = new String(testKey.Where(ch => !char.IsDigit(ch)).ToArray());
+				var octaveString = new String(testKey.Where(ch => char.IsDigit(ch)).ToArray());
+				desiredOctave = int.Parse(octaveString);
+				Key = rawNote;
 			}
 		}
 
