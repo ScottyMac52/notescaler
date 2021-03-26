@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CommandLine;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,75 +11,51 @@ namespace NoteScaler
 {
 	class Program
 	{
-		private static int a4Reference = 440;
-
 		static int Main(string[] args)
 		{
-			var octave = 0;
-			var speed = 750;
-			var instrumentType = InstrumentType.Horn;
-			string fileName = null;
-			MusicNote musicNote = null;
+			var result = Parser.Default.ParseArguments<NoteScalerOptions>(args)
+				.WithParsed(o =>
+			   {
+					var currentForeground = Console.ForegroundColor;
+					Console.ForegroundColor = ConsoleColor.Yellow;
+				   var a4Reference = o.Range.GetValueOrDefault();
+				   var octave = o.Octave.GetValueOrDefault();
+				   var speed = o.Speed.GetValueOrDefault();
+				   var instrumentType = o.Instrument;
+				   string fileName = o.File;
+				   MusicNote musicNote = null;
+				   var pause = o.Speed.GetValueOrDefault() * o.PreWait.GetValueOrDefault();
+					if (pause > 0)
+					{
+						Console.WriteLine($"Pausing {pause}ms prior to playing...");
+						Console.ForegroundColor = currentForeground;
+						Thread.Sleep(pause);
+					}
 
-			if (args.Any(arg => arg.Contains("-r")))
-			{
-				var index = Array.IndexOf(args, "-r");
-				a4Reference = int.Parse(args[index + 1]);
-			}
+					if (o.Note != null)
+					{
+						musicNote = new MusicNote(o.Note, a4Reference);
+						ShowNote(musicNote);
+						var musicNotes = musicNote.MajorScale.ToArray();
+						Console.WriteLine($"Playing Major Scale: {string.Join(',', musicNotes)}");
+						PlaySequence(musicNotes, speed, octave, instrumentType, a4Reference);
+						Thread.Sleep(1000);
+						musicNotes = musicNote.MinorScale.ToArray();
+						Console.WriteLine($"Playing Minor Scale: {string.Join(',', musicNotes)}");
+						PlaySequence(musicNotes, speed, octave, instrumentType, a4Reference);
+					}
 
-			if (args.Any(arg => arg.Contains("-o")))
-			{
-				var index = Array.IndexOf(args, "-o");
-				octave = int.Parse(args[index+1]);
-			}
-
-			if (args.Any(arg => arg.Contains("-s")))
-			{
-				var index = Array.IndexOf(args, "-s");
-				speed = int.Parse(args[index+1]);
-			}
-
-			if (args.Any(arg => arg.Contains("-i")))
-			{
-				var index = Array.IndexOf(args, "-i");
-				instrumentType = (InstrumentType) Enum.Parse(typeof(InstrumentType), args[index+1]);
-			}
-
-			if (args.Any(arg => arg.Contains("-n")))
-			{
-				var index = Array.IndexOf(args, "-n");
-				musicNote = new MusicNote(args[index + 1], a4Reference);
-			}
-
-			if (args.Any(arg => arg.Contains("-f")))
-			{
-				var index = Array.IndexOf(args, "-f");
-				fileName = args[index + 1];
-			}
-
-			if(musicNote != null)
-			{
-				ShowNote(musicNote);
-				var musicNotes = musicNote.MajorScale.ToArray();
-				Console.WriteLine($"Playing Major Scale: {string.Join(',', musicNotes)}");
-				PlaySequence(musicNotes, speed, octave, instrumentType, a4Reference);
-				Thread.Sleep(1000);
-				musicNotes = musicNote.MinorScale.ToArray();
-				Console.WriteLine($"Playing Minor Scale: {string.Join(',', musicNotes)}");
-				PlaySequence(musicNotes, speed, octave, instrumentType, a4Reference);
-			}
-
-			if (!string.IsNullOrEmpty(fileName))
-			{
-				var completeFileName = Path.Combine(Environment.CurrentDirectory, $"Songs\\{fileName}.json");
-				if(!File.Exists(completeFileName))
-				{
-					Console.Error.WriteLine($"Unable to find a file named {completeFileName}");
-					return -2;
-				}
-				var song = JsonConvert.DeserializeObject<Song>(File.ReadAllText(completeFileName));
-				PlaySequence(song.Default, speed, octave, instrumentType, a4Reference);
-			}
+				   if (!string.IsNullOrEmpty(fileName))
+				   {
+					   var completeFileName = Path.Combine(Environment.CurrentDirectory, $"Songs\\{fileName}.json");
+					   if (!File.Exists(completeFileName))
+					   {
+						   Console.Error.WriteLine($"Unable to find a file named {completeFileName}");
+					   }
+					   var song = JsonConvert.DeserializeObject<Song>(File.ReadAllText(completeFileName));
+					   PlaySequence(song.Default, speed, octave, instrumentType, a4Reference);
+				   }
+			   });
 			return 0;
 		}
 
@@ -104,7 +81,17 @@ namespace NoteScaler
 			var notesInTheSong = LoadSong(notePlayer, song, measureTime, octave, defaultInstrument, a4Reference);
 			foreach (var songNoteDuration in notesInTheSong)
 			{
-				songNoteDuration.PlayNote(songNoteDuration.Duration);
+				try
+				{
+					songNoteDuration.PlayNote(songNoteDuration.Duration);
+				}
+				catch(Exception ex)
+				{
+					var currentForeground = Console.ForegroundColor;
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine(ex.Message);
+					Console.ForegroundColor = currentForeground;
+				}
 			}
 		}
 
@@ -120,9 +107,10 @@ namespace NoteScaler
 				var currentOctave = octave;
 				if (currentNote.Any(ch => char.IsDigit(ch)))
 				{
-					var noteOctave = int.Parse(currentNote[^1].ToString());
+					var octaveString = new String(currentNote.Where(ch => char.IsDigit(ch)).ToArray());
+					var noteOctave = int.Parse(octaveString);
 					currentOctave += noteOctave;
-					rawNote = currentNote.Substring(0, currentNote.IndexOf(noteOctave.ToString()));
+					rawNote = currentNote.Substring(0, currentNote.IndexOf(octaveString));
 				}
 				currentNote = $"{rawNote}{currentOctave}";
 				return new MusicNote(currentNote, a4Reference, player, GetNoteDuration(arry, measureTime), currentInstrument);
