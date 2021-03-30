@@ -16,6 +16,9 @@
 		[Option('w', "prewait", Default = 0, HelpText = "How many measures to pause before starting to play.")] 
 		public int? PreWait { get; set; }
 
+		[Option('k', "key", Required = false, Default = null, HelpText = "For sequences and songs, allows the key to be selected.")]
+		public string Key { get; set; }
+
 		[Option('s', "speed", Default = 300, HelpText = "Starting speed i.e. bpm in a full measure.")] 
 		public int? Speed { get; set; }
 
