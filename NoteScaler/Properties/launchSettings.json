@@ -2,7 +2,7 @@
   "profiles": {
     "NoteScaler": {
       "commandName": "Project",
-      "commandLineArgs": "F#"
+      "commandLineArgs": "-t anotherbrickinthewallpart2 -s 1000 -o 1"
     }
   }
 }

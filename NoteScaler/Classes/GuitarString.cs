@@ -39,7 +39,7 @@
 			var startingIndex = 0;
 			var firstSegmentTake = NOTES_LIST.Length - startingNote;
 			var secondSegmentTake = NOTES_LIST.Length - firstSegmentTake;
-			var notes = NOTES_LIST.Skip(startingNote).Take(firstSegmentTake).Concat(NOTES_LIST.Take(secondSegmentTake)).Take(MaxFret);
+			var notes = NOTES_LIST.Skip(startingNote).Take(firstSegmentTake).Concat(NOTES_LIST.Take(secondSegmentTake)).Take(MaxFret+1);
 			string lastNote = null;
 			var currentOctave = Octave;
 			foreach(var note in notes)

@@ -34,6 +34,11 @@
 			return Strings?.SingleOrDefault(str => str.Number.Equals(stringNumber))?.FretToNote[fret];
 		}
 
+		public int GetNote(int stringNumber, string note)
+		{
+			return Strings?.SingleOrDefault(str => str.Number.Equals(stringNumber))?.NoteToFret[note] ?? -1;
+		}
+
 		private void InitializeStrings()
 		{
 			switch(TuningScheme)
