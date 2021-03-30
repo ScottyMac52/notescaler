@@ -1,9 +1,7 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Config
 {
 	using CommandLine;
-	using System;
-	using System.Collections.Generic;
-	using System.Text;
+	using NoteScaler.Enums;
 
 	public class NoteScalerOptions
 	{
@@ -30,5 +28,9 @@
 
 		[Option('f', "file", Default = null, HelpText = "Name of the file to play from the Songs directory.")] 
 		public string File { get; set; }
+
+		[Option('t', "tab", Default = null, HelpText = "Name of the tab file to play from the Tabs directory.")]
+		public string Tab { get; set; }
+
 	}
 }

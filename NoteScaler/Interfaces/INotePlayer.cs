@@ -1,4 +1,6 @@
-﻿namespace NoteScaler
+﻿using NoteScaler.Enums;
+
+namespace NoteScaler.Interfaces
 {
 	public interface INotePlayer
 	{

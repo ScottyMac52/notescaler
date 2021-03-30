@@ -1,4 +1,4 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Enums
 {
 	public enum InstrumentType
 	{

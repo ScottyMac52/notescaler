@@ -1,4 +1,4 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Enums
 {
 	using System;
 	using System.Collections.Generic;

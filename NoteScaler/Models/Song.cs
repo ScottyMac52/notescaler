@@ -1,4 +1,4 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Models
 {
 	using Newtonsoft.Json;
 	using System.Collections.Generic;

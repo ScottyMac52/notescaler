@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Linq;
-
-namespace NoteScaler
+﻿namespace NoteScaler.Models
 {
+	using Newtonsoft.Json;
+	using System.Linq;
+
 	public class SongKey
 	{
 		[JsonProperty("sequence")]
