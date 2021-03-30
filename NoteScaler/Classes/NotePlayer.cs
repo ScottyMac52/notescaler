@@ -1,7 +1,9 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Classes
 {
 	using NAudio.Wave;
 	using NAudio.Wave.SampleProviders;
+	using NoteScaler.Enums;
+	using NoteScaler.Interfaces;
 	using System;
 	using System.Threading;
 

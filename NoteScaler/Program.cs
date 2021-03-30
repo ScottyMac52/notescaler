@@ -2,6 +2,8 @@
 {
 	using CommandLine;
 	using Newtonsoft.Json;
+	using NoteScaler.Classes;
+	using NoteScaler.Config;
 	using System;
 	using System.IO;
 	using System.Linq;
@@ -14,22 +16,23 @@
 			var result = Parser.Default.ParseArguments<NoteScalerOptions>(args)
 				.WithParsed(o =>
 			   {
-					var currentForeground = Console.ForegroundColor;
-					Console.ForegroundColor = ConsoleColor.Yellow;
+				   var currentForeground = Console.ForegroundColor;
+				   Console.ForegroundColor = ConsoleColor.Yellow;
 				   var a4Reference = o.Range.GetValueOrDefault();
 				   var octave = o.Octave.GetValueOrDefault();
 				   var speed = o.Speed.GetValueOrDefault();
 				   string key = o.Key;
 				   var instrumentType = o.Instrument;
 				   string fileName = o.File;
+				   var tabName = o.Tab;
 				   MusicNote musicNote = null;
 				   var pause = o.Speed.GetValueOrDefault() * o.PreWait.GetValueOrDefault();
-					if (pause > 0)
-					{
-						Console.WriteLine($"Pausing {pause}ms prior to playing...");
-						Console.ForegroundColor = currentForeground;
-						Thread.Sleep(pause);
-					}
+				   if (pause > 0)
+				   {
+					   Console.WriteLine($"Pausing {pause}ms prior to playing...");
+					   Console.ForegroundColor = currentForeground;
+					   Thread.Sleep(pause);
+				   }
 
 				   var playableSequence = new PlayableSequence()
 				   {
@@ -40,20 +43,32 @@
 				   };
 
 				   if (o.Note != null)
-					{
-						musicNote = new MusicNote(o.Note, a4Reference);
-						ShowNote(musicNote);
-						var musicNotes = musicNote.MajorScale.ToArray();
-						Console.WriteLine($"Playing Major Scale: {string.Join(',', musicNotes)}");
-						playableSequence.LoadSequenceFromString(musicNote.MajorScale);
-						playableSequence.Prepare();
-						playableSequence.Play();
-						Thread.Sleep(1000);
-						musicNotes = musicNote.MinorScale.ToArray();
-						Console.WriteLine($"Playing Minor Scale: {string.Join(',', musicNotes)}");
-						playableSequence.LoadSequenceFromString(musicNote.MinorScale);
-						playableSequence.Prepare();
-						playableSequence.Play();
+				   {
+					   musicNote = new MusicNote(o.Note, a4Reference);
+					   ShowNote(musicNote);
+					   var musicNotes = musicNote.MajorScale.ToArray();
+					   Console.WriteLine($"Playing Major Scale: {string.Join(',', musicNotes)}");
+					   playableSequence.LoadSequenceFromString(musicNote.MajorScale);
+					   playableSequence.Prepare();
+					   playableSequence.Play();
+					   Thread.Sleep(1000);
+					   musicNotes = musicNote.MinorScale.ToArray();
+					   Console.WriteLine($"Playing Minor Scale: {string.Join(',', musicNotes)}");
+					   playableSequence.LoadSequenceFromString(musicNote.MinorScale);
+					   playableSequence.Prepare();
+					   playableSequence.Play();
+				   }
+
+				   if (!string.IsNullOrEmpty(tabName))
+				   {
+					   var completeFileName = Path.Combine(Environment.CurrentDirectory, $"Tabs\\{tabName}.json");
+					   if (!File.Exists(completeFileName))
+					   {
+						   Console.Error.WriteLine($"Unable to find a file named {completeFileName}");
+					   }
+					   playableSequence.LoadTabFromFile(tabName);
+					   playableSequence.Prepare();
+					   playableSequence.Play();
 				   }
 
 				   if (!string.IsNullOrEmpty(fileName))

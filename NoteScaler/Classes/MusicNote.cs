@@ -1,5 +1,7 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Classes
 {
+	using NoteScaler.Enums;
+	using NoteScaler.Interfaces;
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
@@ -523,19 +525,6 @@
 				}
 				notesCounted += index;
 				var newNote = scaleNotes.ElementAt(notesCounted);
-				/*
-				if((lastNote?.Length ?? 0) > 0 && (lastNote?.Contains(newNote[0]) ?? false))
-				{
-					if(useFlats)
-					{
-						newNote = SharpNotes.ElementAt(notesCounted);
-					}
-					else
-					{
-						newNote = FlatNotes.ElementAt(notesCounted);
-					}
-				}
-				*/
 				if(newNote.Contains(C_NOTE) && currentOctave == 0)
 				{
 					currentOctave++;

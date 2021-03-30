@@ -12,6 +12,7 @@
     <None Remove="Songs\CMajorScale.json" />
     <None Remove="Songs\IonianCScale.json" />
     <None Remove="Songs\maryhadalittlelamb.json" />
+    <None Remove="Tabs\anotherbrickinthewallpart2.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +30,9 @@
     </Content>
     <Content Include="Songs\maryhadalittlelamb.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tabs\anotherbrickinthewallpart2.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

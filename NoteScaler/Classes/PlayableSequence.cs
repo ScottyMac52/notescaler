@@ -1,6 +1,8 @@
-﻿namespace NoteScaler
+﻿namespace NoteScaler.Classes
 {
 	using Newtonsoft.Json;
+	using NoteScaler.Enums;
+	using NoteScaler.Models;
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
@@ -11,23 +13,28 @@
 		public void Prepare()
 		{
 			NotePlayer = new NotePlayer();
+			Guitar = new Guitar();
 			NoteSequence = PrepareSequence();
 		}
 
 		public void Play()
 		{
-			foreach (var songNoteDuration in NoteSequence)
+			var repeat = Repeat ?? 1;
+			for (var counter = repeat; counter > 0; counter--)
 			{
-				try
+				foreach (var songNoteDuration in NoteSequence)
 				{
-					songNoteDuration.PlayNote(songNoteDuration.Duration);
-				}
-				catch (Exception ex)
-				{
-					var currentForeground = Console.ForegroundColor;
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(ex.Message);
-					Console.ForegroundColor = currentForeground;
+					try
+					{
+						songNoteDuration.PlayNote(songNoteDuration.Duration);
+					}
+					catch (Exception ex)
+					{
+						var currentForeground = Console.ForegroundColor;
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.WriteLine(ex.Message);
+						Console.ForegroundColor = currentForeground;
+					}
 				}
 			}
 		}
@@ -39,13 +46,58 @@
 		public InstrumentType InstrumentType { get; set; } = InstrumentType.Horn;
 		public int A4Reference { get; set; } = 440;
 		public NotePlayer NotePlayer { get; private set;}
-
+		public Guitar Guitar { get; private set; }
+		public int? Repeat { get; private set; }
 		
 		public void LoadSequenceFromString(IEnumerable<string> sequence)
 		{
 			Song = sequence.ToArray();
 			NoteSequence = PrepareSequence();
 		}
+
+
+		public bool LoadTabFromFile(string tabName)
+		{
+			if (!string.IsNullOrEmpty(tabName))
+			{
+				var completeFileName = Path.Combine(Environment.CurrentDirectory, $"Tabs\\{tabName}.json");
+				if (!File.Exists(completeFileName))
+				{
+					throw new FileNotFoundException($"Tab file not found in {Path.Combine(Environment.CurrentDirectory, "Tabs")}", tabName);
+				}
+				var tabDefinition = JsonConvert.DeserializeObject<Tablature>(File.ReadAllText(completeFileName));
+				tabDefinition.FixUp();
+				Guitar = new Guitar(6, tabDefinition.Tuning, 21);
+				var notes = new List<string>();
+				var frettedNotes = tabDefinition.TabString.Split(',');
+				foreach (var currentNote in frettedNotes)
+				{
+					var fret = 0;
+					var timing = 1.0;
+					var noteParts = currentNote.Split('-');
+					var stringName = noteParts[0];
+					if (noteParts.Length > 1)
+					{
+						fret = int.Parse(noteParts[1]);
+					}
+					if (noteParts.Length > 2)
+					{
+						timing = float.Parse(noteParts[2]);
+					}
+
+					var note = Guitar.GetNote(int.Parse(stringName), fret);
+					notes.Add($"{note}-{timing}");
+				}
+
+				Song = notes.ToArray();
+				Repeat = tabDefinition.Repeat;
+				NoteSequence = PrepareSequence();
+				return true;
+			}
+
+			return false;
+		}
+
 
 		public bool LoadSequenceFromFile(string songName, string keyName = null)
 		{
