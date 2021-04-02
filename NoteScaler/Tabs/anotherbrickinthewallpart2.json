@@ -1,7 +1,9 @@
 {
-	"tuning": "dropC",
+	"tuning": "standard",
+	"name":  "Another Brick in the Wall Part2",
 	"speed": 1000,
-	"tab": "4-0-.25, 4-2-.25, 4-3-.25, 4-2-.50, 4-0-.25, 4-2-.50, 4-3-.25",
+	"tab": "5-5-.25, 5-7-.25, 5-8-.25, 5-7-.50, 5-5-.25, 5-7-.50, 5-8-.25",
+	"strings": 6,
 	"default":  "A String",
 	"versions": [
 		{

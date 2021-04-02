@@ -12,14 +12,13 @@ namespace NoteScalerTests
 		{
 			// ARRANGE
 			var stringNumber = 6;
-			var tuning = "E";
+			var tuning = "E2";
 			var maxFrets = 21;
 			var expectedCNoteIndex = 8;
-			var startingOctave = 3;
 
 			// ACT
-			var actual = new GuitarString(stringNumber, tuning, maxFrets, startingOctave);
-			var cNoteIndex = actual.NoteToFret["C4"];
+			var actual = new GuitarString(stringNumber, tuning, maxFrets);
+			var cNoteIndex = actual.GetNote("C3");
 
 			// ASSERT
 			Assert.Equal(tuning, actual.Tuning);
@@ -31,14 +30,13 @@ namespace NoteScalerTests
 		{
 			// ARRANGE
 			var stringNumber = 6;
-			var tuning = "C#";
+			var tuning = "C#2";
 			var maxFrets = 12;
 			var expectedCNoteIndex = 11;
-			var startingOctave = 3;
-
+	
 			// ACT
-			var actual = new GuitarString(stringNumber, tuning, maxFrets, startingOctave);
-			var cNoteIndex = actual.NoteToFret["C4"];
+			var actual = new GuitarString(stringNumber, tuning, maxFrets);
+			var cNoteIndex = actual.GetNote("C3");
 
 			// ASSERT
 			Assert.Equal(tuning, actual.Tuning);
@@ -50,14 +48,13 @@ namespace NoteScalerTests
 		{
 			// ARRANGE
 			var stringNumber = 6;
-			var tuning = "D";
+			var tuning = "D2";
 			var maxFrets = 24;
 			var expectedCNoteIndex = 1;
-			var startingOctave = 3;
 
 			// ACT
-			var actual = new GuitarString(stringNumber, tuning, maxFrets, startingOctave);
-			var cNoteIndex = actual.NoteToFret["D#3"];
+			var actual = new GuitarString(stringNumber, tuning, maxFrets);
+			var cNoteIndex = actual.GetNote("D#2");
 
 			// ASSERT
 			Assert.Equal(tuning, actual.Tuning);

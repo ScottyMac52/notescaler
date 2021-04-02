@@ -2,7 +2,9 @@
 {
 	using Newtonsoft.Json;
 	using System.Collections.Generic;
+	using System.Diagnostics.CodeAnalysis;
 
+	[ExcludeFromCodeCoverage]
 	public class Song : SongKey
 	{
 		[JsonProperty("keys")]
