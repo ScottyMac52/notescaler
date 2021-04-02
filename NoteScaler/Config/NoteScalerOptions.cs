@@ -2,7 +2,9 @@
 {
 	using CommandLine;
 	using NoteScaler.Enums;
+	using System.Diagnostics.CodeAnalysis;
 
+	[ExcludeFromCodeCoverage]
 	public class NoteScalerOptions
 	{
 		[Option('r', "range", Default = 440, HelpText = "The frequency of the A4 Note, defaults to 440.")] 

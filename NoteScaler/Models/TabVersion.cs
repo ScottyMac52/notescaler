@@ -1,5 +1,4 @@
-﻿
-namespace NoteScaler.Models
+﻿namespace NoteScaler.Models
 {
 	using Newtonsoft.Json;
 	using Newtonsoft.Json.Converters;
@@ -7,17 +6,17 @@ namespace NoteScaler.Models
 
 	public class TabVersion
 	{
-		[JsonProperty("name")]
+		[JsonProperty("name", Required = Required.Always)]
 		public string Name { get; set; }
 
 		[JsonProperty("speed")]
 		public int Speed { get; set; }
 
-		[JsonProperty("tuning")]
+		[JsonProperty("tuning", Required = Required.Always)]
 		[JsonConverter(typeof(StringEnumConverter))]
 		public TuningScheme Tuning { get; set; }
 
-		[JsonProperty("tab")]
+		[JsonProperty("tab", Required = Required.Always)]
 		public string TabString { get; set; }
 
 	}

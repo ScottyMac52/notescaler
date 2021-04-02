@@ -8,7 +8,7 @@
 		[JsonProperty("sequence")]
 		public string Sequence { get; set; }
 
-		[JsonProperty("keyName")]
+		[JsonProperty("keyName", Required = Required.Always)]
 		public string Name { get; set; }
 
 		[JsonIgnore]

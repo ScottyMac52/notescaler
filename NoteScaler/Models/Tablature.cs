@@ -15,6 +15,9 @@
 		[JsonProperty("versions")]
 		public IEnumerable<TabVersion> TabVersions { get; set; }
 
+		[JsonProperty("strings")]
+		public int NumberOfStrings { get; set; } = 6;
+
 		public void FixUp()
 		{
 			TabVersions.Where(tv => tv.Speed == 0).ToList().ForEach(version =>

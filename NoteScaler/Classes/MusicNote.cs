@@ -1,5 +1,6 @@
 ﻿namespace NoteScaler.Classes
 {
+	using BidirectionalMap;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
 	using System;
@@ -61,6 +62,7 @@
 		#endregion private static data
 
 		#region private data
+		private bool isValid = false;
 		private int desiredOctave = 0;
 		private IEnumerable<string> minorScale;
 		private IEnumerable<string> relativeMinorScale;
@@ -141,9 +143,14 @@
 		public int DesiredOctave => desiredOctave;
 
 		/// <summary>
+		/// Is the note valid
+		/// </summary>
+		public bool IsValid => isValid;
+
+		/// <summary>
 		/// Interface for playing notes
 		/// </summary>
-		public INotePlayer NotePlayer { get; set; }
+		public IPlayer NotePlayer { get; set; }
 
 		#endregion Key melodic properties
 
@@ -168,6 +175,11 @@
 		/// minor scale for the current Key
 		/// </summary>
 		public IEnumerable<string> MinorScale => minorScale;
+
+		/// <summary>
+		/// The Minor scale of the note that is the 6th Note of this notes Major Scale
+		/// </summary>
+		public IEnumerable<string> RelativeMinorScale => relativeMinorScale;
 
 		#endregion Scale data
 
@@ -228,7 +240,7 @@
 		/// <returns></returns>
 		public override string ToString()
 		{
-			return $"{Key}{DesiredOctave}";
+			return $"{Key}{DesiredOctave}-{Duration}ms";
 		}
 
 		#endregion public properties
@@ -236,77 +248,193 @@
 		#region Ctor
 
 		/// <summary>
-		/// Onlt way to construct a Key for a note
+		/// Create pattern for <see cref="MusicNote"/>
 		/// </summary>
 		/// <param name="note"></param>
 		/// <param name="a4Reference"></param>
 		/// <param name="player"></param>
 		/// <param name="duration"></param>
 		/// <param name="currentInstrument"></param>
-		public MusicNote(string note, int a4Reference = 440, INotePlayer player = null, int duration = 500, InstrumentType currentInstrument = default)
+		/// <returns></returns>
+		public static MusicNote Create(string note, int a4Reference = 440, IPlayer player = null, int duration = 500, InstrumentType currentInstrument = default)
 		{
-			Key = note;
-			Reference = a4Reference;
-			this.NotePlayer = player;
-			this.Duration = duration;
-			this.Instrument = currentInstrument;
-			InitializeNote();
+			var musicNote = CheckCache(note, a4Reference);
+			musicNote.Duration = duration;
+			musicNote.Instrument = currentInstrument;
+			musicNote.NotePlayer = player;
+			return musicNote;
+		}
+
+		private static MusicNote CheckCache(string note, int a4Reference)
+		{
+			MusicNote musicNote = null;
+			if (MusicNoteCache == null)
+			{
+				MusicNoteCache = new BiMap<string, MusicNote>();
+			}
+			if (MusicNoteCache.Forward.ContainsKey(note))
+			{
+				musicNote = MusicNoteCache.Forward[note];
+			}
+			if (musicNote == null)
+			{
+				musicNote = new MusicNote()
+				{
+					Key = note,
+					Reference = a4Reference
+				};
+				musicNote.Error += MusicNote_Error;
+				musicNote.InitializeNote();
+				if (musicNote.IsValid)
+				{
+					FactoryCreateNote?.Invoke(musicNote, new EventArgs());
+					MusicNoteCache.Add(note, musicNote);
+				}
+				else
+				{
+					return null;
+				}
+			}
+			return musicNote;
+		}
+
+		private static void MusicNote_Error(object sender, Exception e)
+		{
+			FactoryError?.Invoke(sender, e);
+		}
+
+		/// <summary>
+		/// Private ctor
+		/// </summary>
+		private MusicNote()
+		{
+			CreateNote?.Invoke(this, new EventArgs());
 		}
 
 		#endregion Ctor
 
+		#region Caching
+
+		protected static BiMap<string, MusicNote> MusicNoteCache;
+
+		#endregion Caching
+
 		#region Public methods
 
-		public void PlayNote(int duration)
+		/// <summary>
+		/// Plays the note using the current <see cref="IPlayer"/> for <see cref="Duration"/>ms
+		/// </summary>
+		public void PlayNote()
 		{
-			if(DesiredOctave > Frequencies.Count() -1)
+			if (DesiredOctave > Frequencies.Count() - 1)
 			{
-				throw new ArgumentException($"{DesiredOctave} is too high of an Octave to play {Key}", nameof(DesiredOctave));
+				var error = new ArgumentException($"{DesiredOctave} is too high of an Octave to play {Key}", nameof(DesiredOctave));
+				Error?.Invoke(this, error);
 			}
-			var frequency = Frequencies[DesiredOctave];
-			Console.WriteLine($"Playing note {this} at {frequency} Hz for {duration}ms as {Instrument}.");
-			NotePlayer?.PlayNote(Frequencies[DesiredOctave], Instrument, duration);
+			else
+			{
+				try
+				{
+					var frequency = Frequencies[DesiredOctave];
+					PlayingNote?.Invoke(this, new EventArgs());
+					NotePlayer?.Play(Frequencies[DesiredOctave], Instrument, Duration);
+				}
+				catch(Exception ex)
+				{
+					Error?.Invoke(this, ex);
+				}
+			}
 		}
-
-		public void MakeSharper()
-		{
-			this.Key = NoteAfter;
-			InitializeNote();
-		}
-		public void MakeFlatter()
-		{
-			this.Key = NoteBefore;
-			InitializeNote();
-		}
-
 		#endregion Public methods
+
+		#region Events
+
+		public event EventHandler CreateNote;
+		public event EventHandler PlayingNote;
+		public event EventHandler<Exception> Error;
+
+		public static event EventHandler<Exception> FactoryError;
+		public static event EventHandler FactoryCreateNote; 
+
+		#endregion Events
 
 		#region private helpers 
 
 		private void InitializeNote()
 		{
-			SetToneOfNote();
-			AdjustNoteOctave();
-			GetNoteIndex(out List<string> sharpNotes, out List<string> flatNotes, out int currentNoteIndex);
+			try
+			{
+				SetToneOfNote();
+				AdjustNoteOctave();
+				var flatNotes = NotesFlat.ToList();
+				var sharpNotes = NotesSharp.ToList();
+				int currentNoteIndex = SetupNotesScale(Key, out sharpNotes, out flatNotes);
+				FlatNotes = flatNotes;
+				SharpNotes = sharpNotes;
+				InitializeFrequencies(currentNoteIndex);
+				InitializeScalesAndKeys();
+				isValid = true;
+			}
+			catch (Exception ex)
+			{
+				Error?.Invoke(this, ex);
+				isValid = false;
+			}		
+		}
 
+		private int SetupNotesScale(string note, out List<string> sharpNotes, out List<string> flatNotes)
+		{
+			var currentNoteIndex = GetNoteIndex(note, out sharpNotes, out flatNotes);
 			if (currentNoteIndex > 0)
 			{
 				var takeFlat = flatNotes.Count - currentNoteIndex - 1;
 				var notes = flatNotes.Skip(currentNoteIndex).Take(takeFlat).ToList();
 				notes.AddRange(flatNotes.Take(currentNoteIndex + 1).Select(note => $"{note}"));
-				FlatNotes = notes;
+				flatNotes = notes;
 
 				var takeSharp = sharpNotes.Count - currentNoteIndex - 1;
 				notes = sharpNotes.Skip(currentNoteIndex).Take(takeSharp).ToList();
 				notes.AddRange(sharpNotes.Take(currentNoteIndex + 1).Select(note => $"{note}"));
-				SharpNotes = notes;
+				sharpNotes = notes;
 			}
-			else
-			{
-				FlatNotes = flatNotes;
-				SharpNotes = sharpNotes;
-			}
+			return currentNoteIndex;
+		}
 
+		private void InitializeScalesAndKeys()
+		{
+			minorScale = GetMinorScale(Key);
+			majorScale = GetMajorScale(Key);
+			relativeMinor = GetRelativeKey(false);
+			relativeMajor = GetRelativeKey(true);
+			noteBefore = GetNoteBefore(false);
+			noteAfter = GetNoteAfter(false);
+			minorNoteBefore = GetNoteBefore(true, true);
+			minorNoteAfter = GetNoteAfter(true, true);
+			majorNoteBefore = GetNoteBefore(true);
+			majorNoteAfter = GetNoteAfter(true);
+			minorChord = GetMinorChord();
+			majorChord = GetMajorChord();
+			relativeMinorScale = GetRelativeMinorScale();
+		}
+
+		private IEnumerable<string> GetRelativeMinorScale()
+		{
+			// Get the 5th indexed Note of the Major Scale
+			var relativeMinorNote = GetRelativeKey();
+			if (relativeMinorNote.Any(ch => char.IsDigit(ch)))
+			{
+				relativeMinorNote = new String(relativeMinorNote.Where(ch => !char.IsDigit(ch)).ToArray());
+			}
+			var flatNotes = NotesFlat.ToList();
+			var sharpNotes = NotesSharp.ToList();
+			int currentNoteIndex = SetupNotesScale(relativeMinorNote, out sharpNotes, out flatNotes);
+			// Using the Minor scale pattern get the minor scale of that note
+			var minorScale = GetScale(relativeMinorNote, false, IsFlat, flatNotes, sharpNotes);
+			return minorScale;
+		}
+
+		private void InitializeFrequencies(int currentNoteIndex)
+		{
 			var frequencyList = GetFrequenciesFromReference().ToArray();
 			Frequencies = new float[]
 			{
@@ -323,19 +451,6 @@
 				frequencyList[currentNoteIndex]*(float) Math.Pow(2,6),
 				frequencyList[currentNoteIndex]*(float) Math.Pow(2,7)
 			};
-
-			minorScale = GetMinorScale();
-			majorScale = GetMajorScale();
-			relativeMinor = GetRelativeKey(false);
-			relativeMajor = GetRelativeKey(true);
-			noteBefore = GetNoteBefore(false);
-			noteAfter = GetNoteAfter(false);
-			minorNoteBefore = GetNoteBefore(true, true);
-			minorNoteAfter = GetNoteAfter(true, true);
-			majorNoteBefore = GetNoteBefore(true);
-			majorNoteAfter = GetNoteAfter(true);
-			minorChord = GetMinorChord();
-			majorChord = GetMajorChord();
 		}
 
 		private float[] GetFrequenciesFromReference()
@@ -359,17 +474,18 @@
 			return frequencyList;
 		}
 
-		private void GetNoteIndex(out List<string> sharpNotes, out List<string> flatNotes, out int currentNoteIndex)
+		private int GetNoteIndex(string note, out List<string> sharpNotes, out List<string> flatNotes)
 		{
 			sharpNotes = NotesSharp.ToList();
 			flatNotes = NotesFlat.ToList();
-			var currentSharpNoteIndex = sharpNotes.IndexOf(Key);
-			var currentFlatNoteIndex = flatNotes.IndexOf(Key);
-			currentNoteIndex = currentSharpNoteIndex == -1 ? currentFlatNoteIndex : currentSharpNoteIndex;
+			var currentSharpNoteIndex = sharpNotes.IndexOf(note);
+			var currentFlatNoteIndex = flatNotes.IndexOf(note);
+			var currentNoteIndex = currentSharpNoteIndex == -1 ? currentFlatNoteIndex : currentSharpNoteIndex;
 			if (currentNoteIndex == -1)
 			{
-				throw new ArgumentException("Unable to find referenced note!", Key);
+				Error?.Invoke(this, new ArgumentException("Unable to find referenced note!", note));
 			}
+			return currentNoteIndex;
 		}
 
 		private void AdjustNoteOctave()
@@ -414,16 +530,16 @@
 			}
 			return targetKey;
 		}
-		private IEnumerable<string> GetMajorScale()
+		private IEnumerable<string> GetMajorScale(string note)
 		{
 			// Formula WWHWWWH
-			return GetScale(true, ToneType == ToneTypes.Flat);
+			return GetScale(note, true, ToneType == ToneTypes.Flat);
 		}
 
-		private IEnumerable<string> GetMinorScale()
+		private IEnumerable<string> GetMinorScale(string note)
 		{
 			// Formula WHWWHWW
-			return GetScale(false, ToneType == ToneTypes.Flat);
+			return GetScale(note, false, ToneType == ToneTypes.Flat);
 		}
 
 		private string GetNoteBefore(bool useScale = true, bool useMinorScale = false)
@@ -493,18 +609,18 @@
 			return noteList;
 		}
 
-		private IEnumerable<string> GetScale(bool isMajor = true, bool useFlats = false)
+		private IEnumerable<string> GetScale(string note, bool isMajor = true, bool useFlats = false, IEnumerable<string> flatNotes = null, IEnumerable<string> sharpNotes = null)
 		{
 			List<string> scaleNotes;
 			int currentOctave = 0;
 			var noteList = new List<string>();
 			if (useFlats)
 			{
-				scaleNotes = FlatNotes.ToList();
+				scaleNotes = (flatNotes ?? FlatNotes).ToList();
 			}
 			else
 			{
-				 scaleNotes = SharpNotes.ToList();
+				 scaleNotes = (sharpNotes ?? SharpNotes).ToList();
 			}
 
 			int currentNotesInScale = 0;
@@ -514,8 +630,7 @@
 			{
 				currentScale = MINOR_SCALE.Split(Separator);
 			}
-			noteList.Add($"{Key}{currentOctave}");
-			string lastNote = null;
+			noteList.Add($"{note}{currentOctave}");
 			while (noteList.Count() < 8)
 			{
 				int index = 1;
@@ -530,7 +645,6 @@
 					currentOctave++;
 				}
 				noteList.Add($"{newNote}{currentOctave}");
-				lastNote = newNote;
 				currentNotesInScale++;
 			}
 			return noteList;
