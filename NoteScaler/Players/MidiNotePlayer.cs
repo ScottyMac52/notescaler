@@ -1,16 +1,25 @@
 ﻿namespace NoteScaler.Players
 {
+	using NoteScaler.Classes;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
-	using System;
+	using NoteScaler.Models;
 	using System.Collections.Generic;
-	using System.Text;
 
-	public class MidiNotePlayer : IPlayer
+	public class MidiNotePlayer : PlayEngineBase, IPlayer
 	{
-		public void Play(float frequency, InstrumentType instrument, int duration = 500)
+		/// <inheritdoc/>
+		public override bool CanPause => true;
+
+		/// <inheritdoc/>
+		public override bool CanStop => true;
+
+		public MidiNotePlayer()
 		{
-			throw new NotImplementedException();
+		}
+
+		public override void Play(IEnumerable<FrequencyDuration> noteList, InstrumentType instrument)
+		{
 		}
 	}
 }

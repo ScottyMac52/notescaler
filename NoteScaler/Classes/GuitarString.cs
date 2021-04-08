@@ -1,6 +1,7 @@
 ﻿namespace NoteScaler.Classes
 {
 	using BidirectionalMap;
+	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
 	using System;
 	using System.Collections.Generic;

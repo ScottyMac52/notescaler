@@ -1,6 +1,8 @@
-﻿namespace NoteScaler.Interfaces
+﻿namespace NoteScaler.Models
 {
-	public class PlayerEvent
+	using NoteScaler.Enums;
+
+	public class PlayerEngineEvent
 	{
 		public PlayerEventType EventType { get; set; }
 

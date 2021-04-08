@@ -1,7 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace NoteScaler.Models
+﻿namespace NoteScaler.Models
 {
+	using System.Diagnostics.CodeAnalysis;
+
 	[ExcludeFromCodeCoverage]
 	public static class NoteIndex
 	{

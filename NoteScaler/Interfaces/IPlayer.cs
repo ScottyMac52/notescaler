@@ -1,29 +1,18 @@
-﻿using NoteScaler.Enums;
-using System;
-
-namespace NoteScaler.Interfaces
+﻿namespace NoteScaler.Interfaces
 {
+	using NoteScaler.Enums;
+	using NoteScaler.Models;
+	using System.Collections.Generic;
+	using static NoteScaler.Classes.PlayEngineBase;
+
 	public interface IPlayer
 	{
 		/// <summary>
-		/// Plays the note
+		/// Plays the array of notes
 		/// </summary>
-		/// <param name="frequency"></param>
+		/// <param name="noteList"></param>
 		/// <param name="instrument"></param>
-		/// <param name="duration"></param>
-		void Play(float frequency, InstrumentType instrument, int duration = 500);
-
-		/// <summary>
-		/// Does this implementation support a pause action?
-		/// </summary>
-		/// <returns></returns>
-		bool CanPause();
-
-		/// <summary>
-		/// Does this implementation support stopping the playing?
-		/// </summary>
-		/// <returns></returns>
-		bool CanStop();
+		void Play(IEnumerable<FrequencyDuration> noteList, InstrumentType instrument);
 
 		/// <summary>
 		/// Stop playing
@@ -34,5 +23,21 @@ namespace NoteScaler.Interfaces
 		/// Pause the playing
 		/// </summary>
 		void Pause();
+
+		/// <summary>
+		/// If true then Player can be paused
+		/// </summary>
+		bool CanPause { get; }
+
+		/// <summary>
+		/// If true then Player can be stopped
+		/// </summary>
+		bool CanStop { get; }
+
+		/// <summary>
+		/// Events for Player
+		/// </summary>
+		event PlayerEventHandler PlayerEvent;
+
 	}
 }

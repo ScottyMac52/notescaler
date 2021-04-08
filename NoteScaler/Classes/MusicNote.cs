@@ -3,6 +3,7 @@
 	using BidirectionalMap;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
+	using NoteScaler.Models;
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
@@ -29,6 +30,9 @@
 		private const string SHARP_NOTE = "#";
 		private const string FLAT_NOTE = "b";
 		private const char Separator = ',';
+		private const int POWER_CHORD = 2;
+		private const int MAJOR_MINOR_THREE_CHORD = 3;
+		private const int MAJOR_MINOR_FIVE_CHORD = 5;
 
 		#endregion Constants
 
@@ -106,6 +110,13 @@
 		/// </summary>
 		public float[] Frequencies { get; set; }
 
+		public float CurrentFrequency => GetCurrentFrequency();
+
+		private float GetCurrentFrequency()
+		{
+			return Frequencies[DesiredOctave];
+		}
+
 		/// <summary>
 		/// Set of sharp notes and natural notes in this key
 		/// </summary>
@@ -151,6 +162,11 @@
 		/// Interface for playing notes
 		/// </summary>
 		public IPlayer NotePlayer { get; set; }
+
+		/// <summary>
+		/// How will the note be played?
+		/// </summary>
+		public ChordType ChordType { get; private set; }
 
 		#endregion Key melodic properties
 
@@ -225,12 +241,24 @@
 		/// <summary>
 		/// Major Chord out to 15th degree
 		/// </summary>
-		public string[] MajorChord => majorChord;
+		public string[] MajorChord15 => majorChord;
 
 		/// <summary>
 		/// Minor Chord out to 15th degree
 		/// </summary>
-		public string[] MinorChord => minorChord;
+		public string[] MinorChord15 => minorChord;
+
+		/// <summary>
+		/// The 1st and 5th notes (Perfect 5th)
+		/// </summary>
+		public string[] PowerChord => GetChord(POWER_CHORD);
+
+		public string[] MajorChord3 => GetChord(MAJOR_MINOR_THREE_CHORD, true);
+
+		public string[] MinorChord3 => GetChord(MAJOR_MINOR_THREE_CHORD);
+
+		public string[] MinorChord7 => GetChord(MAJOR_MINOR_FIVE_CHORD);
+		public string[] MajorChord7 => GetChord(MAJOR_MINOR_FIVE_CHORD, true);
 
 		#endregion Chords for Key
 
@@ -256,12 +284,16 @@
 		/// <param name="duration"></param>
 		/// <param name="currentInstrument"></param>
 		/// <returns></returns>
-		public static MusicNote Create(string note, int a4Reference = 440, IPlayer player = null, int duration = 500, InstrumentType currentInstrument = default)
+		public static MusicNote Create(string note, int a4Reference = 440, IPlayer player = null, int duration = 500, InstrumentType currentInstrument = default, ChordType chordType = ChordType.Note)
 		{
 			var musicNote = CheckCache(note, a4Reference);
-			musicNote.Duration = duration;
-			musicNote.Instrument = currentInstrument;
-			musicNote.NotePlayer = player;
+			if (musicNote != null)
+			{
+				musicNote.Duration = duration;
+				musicNote.Instrument = currentInstrument;
+				musicNote.NotePlayer = player;
+				musicNote.ChordType = chordType;
+			}
 			return musicNote;
 		}
 
@@ -335,11 +367,35 @@
 			{
 				try
 				{
-					var frequency = Frequencies[DesiredOctave];
+					string[] desiredChord = null;
+					switch (ChordType)
+					{
+						case ChordType.Note:
+							desiredChord = new string[] {Key};
+							break;
+						case ChordType.Power:
+							desiredChord = PowerChord;
+							break;
+						case ChordType.MinorThird:
+							desiredChord = MinorChord3;
+							break;
+						case ChordType.MajorThird:
+							desiredChord = MajorChord3;
+							break;
+						case ChordType.MinorSeventh:
+							desiredChord = MinorChord7;
+							break;
+						case ChordType.MajorSeventh:
+							desiredChord = MajorChord7;
+							break;
+					}
+
 					PlayingNote?.Invoke(this, new EventArgs());
-					NotePlayer?.Play(Frequencies[DesiredOctave], Instrument, Duration);
+					var musicNotes = desiredChord.Select(sn => MusicNote.Create(sn));
+					var frequencies = musicNotes.Select(mn => new FrequencyDuration(mn.Key,mn.DesiredOctave,mn.Frequencies[DesiredOctave], Duration));
+					NotePlayer?.Play(frequencies, Instrument);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					Error?.Invoke(this, ex);
 				}
@@ -649,6 +705,28 @@
 			}
 			return noteList;
 		}
+
+		private string[] GetChord(int degrees, bool isMajor = false)
+		{
+			var noteList = new List<string>();
+
+			if(degrees == POWER_CHORD)
+			{
+				noteList.Add(majorChord[0]);
+				noteList.Add(majorChord[2]);
+			}
+			else if(isMajor)
+			{
+				noteList.AddRange(majorChord.Take(degrees));
+			}
+			else
+			{
+				noteList.AddRange(minorChord.Take(degrees));
+			}
+
+			return noteList.ToArray();
+		}
+
 
 		#endregion private helpers 
 	}

@@ -1,4 +1,4 @@
-﻿namespace NoteScaler.Classes
+﻿namespace NoteScaler.Enums
 {
 	public enum PlayableEventType
 	{

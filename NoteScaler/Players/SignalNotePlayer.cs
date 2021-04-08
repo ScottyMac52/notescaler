@@ -4,26 +4,48 @@
 	using NAudio.Wave.SampleProviders;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
+	using NoteScaler.Models;
 	using System;
-	
-	public class SignalNotePlayer : SignalNotePlayerBase, IPlayer
+	using System.Collections.Generic;
+	using System.Linq;
+	using System.Threading;
+
+	public class SignalNotePlayer : PlayEngineBase, IPlayer
 	{
-		public delegate void PlayerEventHandler(object sender, PlayerEvent e);
+		/// <inheritdoc/>
+		public override bool CanPause => false;
+		/// <inheritdoc/>
+		public override bool CanStop => false;
 
-		public override bool CanPause()
-		{
-			return false;
-		}
+		protected ISampleProvider sampleProvider = null;
+		protected ISampleProvider[] sampleProviders = null;
 
-		public override bool CanStop()
+		private SignalGeneratorType signalType;
+		private readonly MixingSampleProvider mixer;
+
+		public SignalNotePlayer()
 		{
-			return false;
+			mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 1))
+			{
+				ReadFully = true
+			};
 		}
 
 		/// <inheritdoc/>
-		public override void Play(float frequency, InstrumentType instrument, int duration = 500)
+		public override void Play(IEnumerable<FrequencyDuration> noteList, InstrumentType instrument)
 		{
-			var signalType = SignalGeneratorType.Sin;
+			base.Play(noteList, instrument);
+			SetInstrument(instrument);
+			sampleProviders = noteList.Select(nl => CreateSignal(nl.Frequency, nl.Duration, true)).ToArray();
+			using var wo = new WaveOut();
+			wo.Init(mixer);
+			wo.Play();
+			Thread.Sleep(noteList.Max(nl => nl.Duration));
+		}
+
+		private void SetInstrument(InstrumentType instrument)
+		{
+			signalType = SignalGeneratorType.Sin;
 			switch (instrument)
 			{
 				case InstrumentType.Horn:
@@ -40,31 +62,23 @@
 					break;
 
 			}
+		}
 
-			var sineWave = new SignalGenerator(44100, 3)
+		private ISampleProvider CreateSignal(float frequency, int duration, bool addToMixer = false)
+		{
+			var sampleProvider = new SignalGenerator(44100, 1)
 			{
 				Gain = 0.2,
 				Frequency = frequency,
 				Type = signalType
 			}
 			.Take(TimeSpan.FromMilliseconds(duration));
-			using var wo = new WaveOutEvent();
-			wo.Init(sineWave);
-
-			var waveOut = new WaveOut();
-			MixingSampleProvider mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 1))
+			if (addToMixer)
 			{
-				ReadFully = true
-			};
-			mixer.AddMixerInput(sineWave);
-			wo.Init(mixer);
-			waveOut.Play();
-
-
-			wo.Play();
-			while (wo.PlaybackState == PlaybackState.Playing)
-			{
+				mixer.AddMixerInput(sampleProvider);
 			}
+			return sampleProvider;
 		}
+
 	}
 }

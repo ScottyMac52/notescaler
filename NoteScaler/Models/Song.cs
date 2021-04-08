@@ -7,6 +7,9 @@
 	[ExcludeFromCodeCoverage]
 	public class Song : SongKey
 	{
+		[JsonProperty("reverse")]
+		public bool Reverse { get; set; } = false;
+
 		[JsonProperty("keys")]
 		public IEnumerable<SongKey> Keys {get;set;}
 
