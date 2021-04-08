@@ -3,6 +3,8 @@
 	using CommandLine;
 	using NoteScaler.Classes;
 	using NoteScaler.Config;
+	using NoteScaler.Enums;
+	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
 	using System;
 	using System.Diagnostics.CodeAnalysis;
@@ -19,7 +21,6 @@
 				{
 					MusicNote.FactoryError += MusicNote_FactoryError;
 					MusicNote.FactoryCreateNote += MusicNote_FactoryCreateNote;
-
 					InitializeNoteScalerOptions(o, out int a4Reference, out string key, out string fileName, out string tabName);
 					var playableSequence = CreatePlayableSequence(o, a4Reference);
 					PlayNoteAsRequired(o.Note, a4Reference, playableSequence);
@@ -138,10 +139,15 @@
 				else
 				{
 					var currentSong = GetTheSongByKeyAsRequired(key, song);
-					playableSequence.Song = currentSong;
-					playableSequence.PrepareSequence();
+					playableSequence.ConvertSongNotesToNoteSequence(currentSong);
 					playableSequence.Prepare();
 					playableSequence.Play();
+
+					if(song.Reverse)
+					{
+						playableSequence.ReverseSequence();
+						playableSequence.Play();
+					}
 				}
 			}
 		}
@@ -158,21 +164,28 @@
 				else
 				{
 					tabs.FixUp();
-					var guitar = new Guitar(tabs.Tuning, 21);
-					playableSequence.ConvertTabsToSongNotes(guitar, tabs);
+					IStringInstrument guitar = new Guitar(tabs.Tuning, 21);
+					playableSequence.ConvertTabsToNoteSequence(guitar, tabs);
 					playableSequence.Repeat = tabs.Repeat;
 					playableSequence.Prepare();
 					playableSequence.Play();
-				}
+			}
 			}
 		}
 
-		private static string[] GetTheSongByKeyAsRequired(string key, Song song)
+		private static SongKey GetTheSongByKeyAsRequired(string key, Song song)
 		{
-			var currentSong = song.Default;
+			var currentSong = (SongKey) song;
 			if (!string.IsNullOrEmpty(key) && song.Keys.Any(songKey => songKey?.Name?.Equals(key) ?? false))
 			{
-				currentSong = song.Keys.Where(songKey => songKey?.Name?.Equals(key, StringComparison.InvariantCultureIgnoreCase) ?? false)?.SelectMany(key => key.SongNotes).ToArray();
+				currentSong = song.Keys.SingleOrDefault(songKey => songKey?.Name?.Equals(key, StringComparison.InvariantCultureIgnoreCase) ?? false);
+			}
+			else
+			{
+				if(!string.IsNullOrEmpty(song.Name) && song.Keys != null)
+				{
+					currentSong = song.Keys.SingleOrDefault(songKey => songKey?.Name?.Equals(song.Name, StringComparison.InvariantCultureIgnoreCase) ?? false);
+				}
 			}
 
 			return currentSong;
@@ -197,7 +210,7 @@
 			WriteMessage($"Of the 7 notes in the {musicNote}m scale {musicNote} has {musicNote.MinorNoteBefore} before it and {musicNote.MinorNoteAfter} after it.");
 			WriteMessage($"Notes in {musicNote} are: {string.Join(',', musicNote.MajorScale)}");
 			WriteMessage($"Notes in {musicNote}m are: {string.Join(',', musicNote.MinorScale)}");
-			WriteMessage($"Major Chord: {string.Join(',', musicNote.MajorChord)} minor Chord: {string.Join(',', musicNote.MinorChord)}");
+			WriteMessage($"Major Chord: {string.Join(',', musicNote.MajorChord15)} minor Chord: {string.Join(',', musicNote.MinorChord15)}");
 			WriteMessage($"The relative minor is {relativeMinor}m");
 			WriteMessage($"The relative minor scale is {string.Join(',', musicNote.RelativeMinorScale)}");
 			WriteMessage($"The relative Major to the minor is {relativeMajor}");

@@ -16,8 +16,7 @@
 	{
 		#region Public properties
 
-		public string[] Song { get; set; }
-		public IEnumerable<MusicNote> NoteSequence { get; private set; }
+		public SongKey Song { get; protected set; }
 		public int MeasureTime { get; set; } = 1000;
 		public int Octave { get; set; } = 2;
 		public InstrumentType InstrumentType { get; set; } = InstrumentType.Horn;
@@ -25,6 +24,8 @@
 		public IPlayer NotePlayer { get; private set; }
 		public IStringInstrument Guitar { get; private set; }
 		public int? Repeat { get; set; }
+		public IEnumerable<NoteGroup> NoteSequence { get; set; }
+		public IEnumerable<CompositeNote> CompositeNotes { get; protected set; }
 
 		#endregion Public properties
 
@@ -40,34 +41,30 @@
 		public void Prepare()
 		{
 			NotePlayer = new SignalNotePlayer();
+			NotePlayer.PlayerEvent += NotePlayer_PlayerEvent;
 			Guitar = new Guitar();
 			PrepareSequence();
 		}
 
+		private void NotePlayer_PlayerEvent(object sender, PlayerEngineEvent e)
+		{
+			if (e.EventType == PlayerEventType.PlayNotes)
+			{
+				PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent() { EventType = PlayableEventType.PlayingNote, EventDetails = e.Message });
+			}
+		}
+
 		/// <summary>
-		/// Turns the string notes in <see cref="Song"/> into <see cref="MusicNote"/>s
+		/// Turns the string notes in <see cref="Song"/> into <see cref="CompositeNote"/>s
 		/// </summary>
 		public void PrepareSequence()
 		{
-			var currentInstrument = InstrumentType;
-			var sequence = Song.Select(s => s.Split(',')[0]).Select(songDef =>
-			{
-				var arry = songDef.Split('-');
-				var currentNote = arry[0];
-				var rawNote = arry[0];
-				currentInstrument = GetInstrument(arry);
-				var currentOctave = Octave;
-				if (currentNote.Any(ch => char.IsDigit(ch)))
-				{
-					var octaveString = new String(currentNote.Where(ch => char.IsDigit(ch)).ToArray());
-					var noteOctave = int.Parse(octaveString);
-					currentOctave += noteOctave;
-					rawNote = currentNote.Substring(0, currentNote.IndexOf(octaveString));
-				}
-				currentNote = $"{rawNote}{currentOctave}";
-				return MusicNote.Create(currentNote, A4Reference, NotePlayer, GetNoteDuration(arry), currentInstrument);
-			});
-			NoteSequence = sequence;
+			CompositeNotes = GetCompositeNotesFromSequence();
+		}
+
+		public void ReverseSequence()
+		{
+			NoteSequence = NoteSequence.Reverse();
 		}
 
 		/// <summary>
@@ -75,18 +72,22 @@
 		/// </summary>
 		public void Play()
 		{
+			if ((CompositeNotes?.Count() ?? 0) == 0)
+			{
+				PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent() { EventType = PlayableEventType.Error, EventDetails = "There are no notes to play" });
+				return;
+			}
+
 			var repeat = Repeat ?? 1;
-			var message = $"Playing sequence of {NoteSequence.Count()} notes {repeat} time(s).";
+			var message = $"Playing sequence of {CompositeNotes?.Count() ?? 0} notes {repeat} time(s).";
 			PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent() { EventType = PlayableEventType.StartSequence, EventDetails = message });
 			for (var counter = repeat; counter > 0; counter--)
 			{
-				foreach (var songNoteDuration in NoteSequence)
+				foreach (var songNoteDuration in CompositeNotes)
 				{
 					try
 					{
-						songNoteDuration.PlayingNote += SongNoteDuration_PlayingNote;
-						songNoteDuration.Error += SongNoteDuration_Error;
-						songNoteDuration.PlayNote();
+						NotePlayer.Play(songNoteDuration.Notes, InstrumentType);
 					}
 					catch (Exception ex)
 					{
@@ -94,7 +95,7 @@
 					}
 				}
 			}
-			PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent() { EventType = PlayableEventType.StopSequence, EventDetails = $"Finished playing {NoteSequence.Count()} notes." });
+			PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent() { EventType = PlayableEventType.StopSequence, EventDetails = $"Finished playing {CompositeNotes.Count()} notes." });
 		}
 
 		/// <summary>
@@ -103,7 +104,7 @@
 		/// <param name="sequence"></param>
 		public void LoadSequenceFromString(IEnumerable<string> sequence)
 		{
-			Song = sequence.ToArray();
+			Song.SetNoteSequence(sequence.ToArray());
 			PrepareSequence();
 			PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent()
 			{
@@ -153,14 +154,25 @@
 		}
 
 		/// <summary>
-		/// Converts <see cref="Tablature"/> using <see cref="Guitar"/> to <see cref="Song"/>
+		/// Converts <see cref="SongKey"/> to a list of <see cref="NoteGroup"/>
+		/// </summary>
+		/// <param name="song"></param>
+		public void ConvertSongNotesToNoteSequence(SongKey song)
+		{
+			Song = song;
+			NoteSequence = CreatePlayableNotesFromSongNotes(Song.SongNotes);
+		}
+
+		/// <summary>
+		/// Converts <see cref="Tablature"/> to a list of <see cref="NoteGroup"/> using <see cref="IStringInstrument"/> to <see cref="SongKey"/>
 		/// </summary>
 		/// <param name="guitar"></param>
 		/// <param name="tabDefinition"></param>
-		public void ConvertTabsToSongNotes(Guitar guitar, Tablature tabDefinition)
+		public void ConvertTabsToNoteSequence(IStringInstrument guitar, Tablature tabDefinition)
 		{
 			var frettedNotes = tabDefinition.TabString.Split(',');
-			Song = CreatePlayableNotesFromTabs(guitar, frettedNotes).ToArray();
+			Song = new SongKey(tabDefinition.Name, null);
+			NoteSequence = CreatePlayableNotesFromTabs(guitar, frettedNotes);
 		}
 
 		#endregion Public methods
@@ -185,38 +197,155 @@
 
 		#region Private helpers
 
+		#region Tabs processing
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="tabbedNotes"></param>
+		/// <returns></returns>
+		private IEnumerable<NoteGroup> CreatePlayableNotesFromSongNotes(IEnumerable<string> songNotes)
+		{
+			foreach (var currentNote in songNotes)
+			{
+				var multipleNotes = currentNote.Split('|');
+				var timedSongNotes = GetTimedSongNotes(multipleNotes);
+				yield return new NoteGroup() { Notes = timedSongNotes.ToArray(), PrimaryNote = timedSongNotes.First() };
+			}
+		}
+
+		private IEnumerable<string> GetTimedSongNotes(string[] multipleNotes)
+		{
+			foreach (var singleNote in multipleNotes)
+			{
+				var noteParts = singleNote.Split('-');
+				var songNote = GetSongNote(noteParts);
+				yield return songNote;
+			}
+		}
+
 		/// <summary>
 		/// Converts a string array of fretted notes to  using <see cref="Guitar"/> to 
 		/// </summary>
 		/// <param name="guitar"></param>
 		/// <param name="tabbedNotes"></param>
 		/// <returns></returns>
-		private IEnumerable<string> CreatePlayableNotesFromTabs(Guitar guitar, IEnumerable<string> tabbedNotes)
+		private IEnumerable<NoteGroup> CreatePlayableNotesFromTabs(IStringInstrument guitar, IEnumerable<string> tabbedNotes)
 		{
 			foreach (var currentNote in tabbedNotes)
 			{
-				var fret = 0;
-				var timing = 1.0;
-				var noteParts = currentNote.Split('-');
-				var stringName = noteParts[0];
-				if (noteParts.Length > 1)
-				{
-					fret = int.Parse(noteParts[1]);
-				}
-				if (noteParts.Length > 2)
-				{
-					timing = float.Parse(noteParts[2]);
-				}
-				var note = guitar.GetNote(int.Parse(stringName), fret);
-				yield return $"{note}-{timing}";
+				var multipleNotes = currentNote.Split('|');
+				var noteList = GetNoteList(guitar, multipleNotes);
+				yield return new NoteGroup() { Notes = noteList.ToArray(), PrimaryNote = noteList.First() };
 			}
 		}
 
-		private int GetNoteDuration(string[] arry)
+		/// <summary>
+		/// Frets the notes on the <see cref="IStringInstrument"/> and gets back the note values 
+		/// </summary>
+		/// <param name="guitar"></param>
+		/// <param name="multipleNotes"></param>
+		/// <returns></returns>
+		private IEnumerable<string> GetNoteList(IStringInstrument guitar, string[] multipleNotes)
 		{
+			foreach (var singleNote in multipleNotes)
+			{
+				yield return GetNoteFromGuitar(guitar, singleNote);
+			}
+		}
+
+		/// <summary>
+		/// Frets a single noite on the <see cref="IStringInstrument"/>
+		/// </summary>
+		/// <param name="guitar"></param>
+		/// <param name="singleNote"></param>
+		/// <returns></returns>
+		private string GetNoteFromGuitar(IStringInstrument guitar, string singleNote)
+		{
+			var noteParts = singleNote.Split('-');
+			var stringNum = GetString(noteParts);
+			var fret = GetFret(noteParts);
+			var timing = GetNoteDuration(noteParts);
+			var note = guitar.GetNote(stringNum, fret);
+			return $"{note}-{timing}";
+		}
+
+		private IEnumerable<CompositeNote> GetCompositeNotesFromSequence()
+		{
+			foreach (var noteSequence in NoteSequence)
+			{
+				yield return new CompositeNote(InstrumentType, NotePlayer, noteSequence.Notes, A4Reference);
+			}
+		}
+
+
+		/// <summary>
+		/// Get the String number that is being fretted
+		/// </summary>
+		/// <param name="arry"></param>
+		/// <returns></returns>
+		private int GetString(string[] arry)
+		{
+			var stringNum = 0;
+			if (arry.Length > 0)
+			{
+				stringNum = int.Parse(arry[0]);
+			}
+			return stringNum;
+		}
+
+		/// <summary>
+		/// Gets the Fret number
+		/// </summary>
+		/// <param name="arry"></param>
+		/// <returns></returns>
+		private int GetFret(string[] arry)
+		{
+			var fret = 0;
 			if (arry.Length > 1)
 			{
-				return (int)(MeasureTime * (float.Parse(arry[1])));
+				fret = int.Parse(arry[1]);
+			}
+
+			return fret;
+		}
+
+		private string GetSongNote(string[] arry)
+		{
+			var note = string.Empty;
+			var timing = MeasureTime;
+			if (arry.Length > 0)
+			{
+				note = arry[0];
+
+				// check for Octave
+				if(!note.Any(ch => char.IsDigit(ch)))
+				{
+					note = $"{note}{Octave}";
+				}
+				else
+				{
+					note = arry[0];
+				}
+			}
+			if (arry.Length > 1)
+			{
+				var noteTime = float.Parse(arry[1]);
+				timing = (int)(MeasureTime * noteTime);
+			}
+			return $"{note}-{timing}";
+		}
+
+		/// <summary>
+		/// Gets the note duration as ms based on the measure time percentage the note plays for
+		/// </summary>
+		/// <param name="arry"></param>
+		/// <returns></returns>
+		private int GetNoteDuration(string[] arry)
+		{
+			if (arry.Length > 2)
+			{
+				return (int)(MeasureTime * (float.Parse(arry[2])));
 			}
 			else
 			{
@@ -224,6 +353,11 @@
 			}
 		}
 
+		/// <summary>
+		/// Gets the Instrument 
+		/// </summary>
+		/// <param name="arry"></param>
+		/// <returns></returns>
 		private InstrumentType GetInstrument(string[] arry)
 		{
 			if (arry.Length == 3)
@@ -232,6 +366,8 @@
 			}
 			return InstrumentType;
 		}
+
+		#endregion Tabs processing
 
 		#endregion Private helpers
 	}
