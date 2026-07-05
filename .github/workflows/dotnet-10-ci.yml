@@ -65,5 +65,5 @@ jobs:
       run_build_release: true
       ci_mode: false
       create_release: true
-      enable_installer: false
+      enable_installer: true
     secrets: inherit
