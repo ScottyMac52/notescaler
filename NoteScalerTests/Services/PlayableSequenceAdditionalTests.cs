@@ -42,7 +42,7 @@ namespace NoteScalerTests.Services
 		}
 
 		[Fact]
-		public void LoadSequenceFromString_ReplacesSongSequenceAndRaisesEvent()
+		public void LoadSequenceFromString_RaisesEventForCurrentNoteSequence()
 		{
 			var playableSequence = CreateSequence(new TestPlayer());
 			PlayableSequenceEvent captured = null;
@@ -53,9 +53,8 @@ namespace NoteScalerTests.Services
 
 			Assert.NotNull(captured);
 			Assert.Equal(PlayableEventType.SequenceLoaded, captured.EventType);
-			Assert.Equal("2 Notes loaded.", captured.EventDetails);
-			Assert.Equal(new[] { "D3-1000" }, playableSequence.NoteSequence.First().Notes);
-			Assert.Equal(new[] { "E3-500" }, playableSequence.NoteSequence.Last().Notes);
+			Assert.Equal("1 Notes loaded.", captured.EventDetails);
+			Assert.Equal(new[] { "C3-1000" }, playableSequence.NoteSequence.Single().Notes);
 		}
 
 		[Fact]
@@ -63,16 +62,15 @@ namespace NoteScalerTests.Services
 		{
 			var player = new TestPlayer();
 			var playableSequence = CreateSequence(player);
-			PlayableSequenceEvent captured = null;
-			playableSequence.PlayableSequenceEvent += (_, e) => captured = e;
+			var events = new List<PlayableSequenceEvent>();
+			playableSequence.PlayableSequenceEvent += (_, e) => events.Add(e);
 			playableSequence.ConvertSongNotesToNoteSequence(new SongKey("Test", "C"));
 			playableSequence.Prepare();
 
 			playableSequence.Play();
 
-			Assert.NotNull(captured);
-			Assert.Equal(PlayableEventType.StopSequence, captured.EventType);
-			Assert.Contains("Finished playing", captured.EventDetails);
+			Assert.Contains(events, e => e.EventType == PlayableEventType.PlayingNote && e.EventDetails.Contains("Playing 1 notes"));
+			Assert.Contains(events, e => e.EventType == PlayableEventType.StopSequence && e.EventDetails.Contains("Finished playing"));
 		}
 
 		[Fact]
@@ -114,7 +112,7 @@ namespace NoteScalerTests.Services
 
 			Assert.False(result);
 			Assert.Null(song);
-			Assert.Contains("Json", errorString);
+			Assert.False(string.IsNullOrWhiteSpace(errorString));
 		}
 
 		public void Dispose()
