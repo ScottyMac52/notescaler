@@ -14,6 +14,9 @@
 	/// </summary>
 	public class PlayableSequence
 	{
+		private readonly Func<IPlayer> notePlayerFactory;
+		private readonly Func<IStringInstrument> stringInstrumentFactory;
+
 		#region Public properties
 
 		public SongKey Song { get; protected set; }
@@ -36,13 +39,28 @@
 
 		#endregion Events
 
+		#region Constructors
+
+		public PlayableSequence()
+			: this(() => new SignalNotePlayer(), () => new Guitar())
+		{
+		}
+
+		public PlayableSequence(Func<IPlayer> notePlayerFactory, Func<IStringInstrument> stringInstrumentFactory)
+		{
+			this.notePlayerFactory = notePlayerFactory ?? throw new ArgumentNullException(nameof(notePlayerFactory));
+			this.stringInstrumentFactory = stringInstrumentFactory ?? throw new ArgumentNullException(nameof(stringInstrumentFactory));
+		}
+
+		#endregion Constructors
+
 		#region Public methods
 
 		public void Prepare()
 		{
-			NotePlayer = new SignalNotePlayer();
+			NotePlayer = notePlayerFactory();
 			NotePlayer.PlayerEvent += NotePlayer_PlayerEvent;
-			Guitar = new Guitar();
+			Guitar = stringInstrumentFactory();
 			PrepareSequence();
 		}
 
