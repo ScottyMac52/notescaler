@@ -52,6 +52,35 @@ namespace NoteScalerTests.Services
 			Assert.Contains("C4[250ms]", captured.Message);
 		}
 
+		[Theory]
+		[InlineData(true, true)]
+		[InlineData(true, false)]
+		public void Pause_DoesNotThrowWhenNoEventHandlersAreAttached(bool canPause, bool canStop)
+		{
+			var player = new TestPlayEngine(canPause, canStop);
+
+			player.Pause();
+		}
+
+		[Theory]
+		[InlineData(true, true)]
+		[InlineData(false, true)]
+		public void Stop_DoesNotThrowWhenNoEventHandlersAreAttached(bool canPause, bool canStop)
+		{
+			var player = new TestPlayEngine(canPause, canStop);
+
+			player.Stop();
+		}
+
+		[Fact]
+		public void Play_DoesNotThrowWhenNoEventHandlersAreAttached()
+		{
+			var player = new TestPlayEngine(true, true);
+			var notes = new[] { new FrequencyDuration("D", 4, 293.66F, 500) };
+
+			player.Play(notes, InstrumentType.Flute);
+		}
+
 		private static void AssertEvent(PlayerEventType? expectedEventType, string expectedMessage, PlayerEngineEvent captured)
 		{
 			if (expectedEventType == null)
