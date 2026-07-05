@@ -3,6 +3,7 @@ namespace NoteScalerTests.Services
 	using NoteScaler.Config;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
+	using NoteScaler.Models;
 	using NoteScaler.Services;
 	using NoteScaler.Services.Interfaces;
 	using NoteScalerTests.Support;
@@ -209,6 +210,7 @@ namespace NoteScalerTests.Services
 					A4Reference = a4Reference,
 					InstrumentType = options.Instrument
 				};
+				CreatedSequence.ConvertSongNotesToNoteSequence(new SongKey("Seed", "C"));
 				return CreatedSequence;
 			}
 		}
