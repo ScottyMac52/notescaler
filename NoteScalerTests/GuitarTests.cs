@@ -1,6 +1,5 @@
 ﻿namespace NoteScalerTests
 {
-	using NoteScaler.Enums;
 	using NoteScaler.Services;
 	using System;
 	using System.Collections.Generic;
@@ -22,9 +21,9 @@
 		}
 
 		[Theory]
-		[InlineData(TuningScheme.DropC, "C3", "D3", "D#3")]
-		[InlineData(TuningScheme.DropCSharp, "C#3", "D#3", "E3")]
-		public void GuitarTest_EnsureDropTuningsAreCorrect(TuningScheme tuningScheme, string expected5Note5, string expected5Note7, string expected5Note8)
+		[InlineData(NoteScaler.Enums.TuningScheme.DropC, "C3", "D3", "D#3")]
+		[InlineData(NoteScaler.Enums.TuningScheme.DropCSharp, "C#3", "D#3", "E3")]
+		public void GuitarTest_EnsureDropTuningsAreCorrect(NoteScaler.Enums.TuningScheme tuningScheme, string expected5Note5, string expected5Note7, string expected5Note8)
 		{
 			var guitar = new Guitar(tuningScheme);
 
