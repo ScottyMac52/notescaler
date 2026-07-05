@@ -25,6 +25,11 @@ namespace NoteScalerTests.Support
 			PlayCount++;
 			LastNotes = noteList.ToArray();
 			LastInstrument = instrument;
+			PlayerEvent?.Invoke(this, new PlayerEngineEvent
+			{
+				EventType = PlayerEventType.PlayNotes,
+				Message = $"Playing {LastNotes.Count()} notes"
+			});
 		}
 
 		public void Stop()
