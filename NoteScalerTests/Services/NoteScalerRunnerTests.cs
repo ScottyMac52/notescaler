@@ -25,11 +25,16 @@ namespace NoteScalerTests.Services
 			Environment.CurrentDirectory = testDirectory;
 		}
 
+		public static IEnumerable<object[]> SupportedCommandLinePaths => new[]
+		{
+			new object[] { Array.Empty<string>() },
+			new object[] { new[] { "--note", "Nope" } },
+			new object[] { new[] { "--file", "missing-song" } },
+			new object[] { new[] { "--tab", "missing-tab" } }
+		};
+
 		[Theory]
-		[InlineData(new string[] { })]
-		[InlineData(new[] { "--note", "Nope" })]
-		[InlineData(new[] { "--file", "missing-song" })]
-		[InlineData(new[] { "--tab", "missing-tab" })]
+		[MemberData(nameof(SupportedCommandLinePaths))]
 		public void Run_ReturnsSuccessForSupportedCommandLinePaths(string[] args)
 		{
 			var harness = CreateHarness();
