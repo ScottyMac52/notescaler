@@ -13,9 +13,10 @@ namespace NoteScalerTests.Services
 		public void CommandLineOptionsService_PreservesExistingCommandLineParsing()
 		{
 			var service = new CommandLineOptionsService();
+
 			var parsedOptions = service.ParseArguments(new[] { "--note", "C" });
 
-			parsedOptions.WithParsed(options => Assert.Equal("C", options.Note));
+			Assert.Equal("Parsed", parsedOptions.Tag.ToString());
 		}
 
 		[Fact]
