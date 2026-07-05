@@ -1,35 +1,69 @@
-name: .NET 10 CI
+name: CI / Build / Release
 
 on:
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - '**/*.md'
+      - '.github/workflows/**'
+
   push:
     branches:
       - master
+    tags:
+      - 'v*.*.*.*'
+    paths-ignore:
+      - '**/*.md'
+      - '.github/workflows/**'
 
-permissions:
-  contents: read
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
-    name: Build and test
-    runs-on: windows-latest
+  ci:
+    name: CI (Tests + Coverage)
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ScottyMac52/shared-github-workflows/.github/workflows/reusable-build-and-release.yml@main
+    with:
+      dotnet_version: '10.0.x'
+      run_tests: true
+      run_coverage: true
+      run_build_release: false
+      ci_mode: true
+      create_release: false
+      enable_installer: false
+    secrets: inherit
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+  build-on-master:
+    name: Build on Master
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+    uses: ScottyMac52/shared-github-workflows/.github/workflows/reusable-build-and-release.yml@main
+    with:
+      dotnet_version: '10.0.x'
+      run_tests: true
+      run_coverage: true
+      run_build_release: true
+      ci_mode: false
+      create_release: false
+      enable_installer: false
+    secrets: inherit
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore
-        run: dotnet restore NoteScaler.sln
-
-      - name: Build
-        run: dotnet build NoteScaler.sln --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test NoteScaler.sln --configuration Release --no-build --verbosity normal
+  release:
+    name: Full Build + Release (Tag only)
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    uses: ScottyMac52/shared-github-workflows/.github/workflows/reusable-build-and-release.yml@main
+    with:
+      dotnet_version: '10.0.x'
+      run_tests: true
+      run_coverage: true
+      run_build_release: true
+      ci_mode: false
+      create_release: true
+      enable_installer: false
+    secrets: inherit
