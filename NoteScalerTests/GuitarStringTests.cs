@@ -1,66 +1,22 @@
 namespace NoteScalerTests
 {
-	using NoteScaler;
-	using NoteScaler.Classes;
-	using System;
+	using NoteScaler.Services;
 	using Xunit;
 
 	public class GuitarStringTests
 	{
-		[Fact]
-		public void GuiatString_EnsureStandardTuneEForString6IsCorrect()
+		[Theory]
+		[InlineData(6, "E2", 21, "C3", 8)]
+		[InlineData(6, "C#2", 12, "C3", 11)]
+		[InlineData(6, "D2", 24, "D#2", 1)]
+		public void GuitarString_GetNote_ReturnsExpectedFretForTuning(int stringNumber, string tuning, int maxFrets, string note, int expectedFret)
 		{
-			// ARRANGE
-			var stringNumber = 6;
-			var tuning = "E2";
-			var maxFrets = 21;
-			var expectedCNoteIndex = 8;
-
-			// ACT
 			var actual = new GuitarString(stringNumber, tuning, maxFrets);
-			var cNoteIndex = actual.GetNote("C3");
 
-			// ASSERT
+			var fret = actual.GetNote(note);
+
 			Assert.Equal(tuning, actual.Tuning);
-			Assert.Equal(expectedCNoteIndex, cNoteIndex);
+			Assert.Equal(expectedFret, fret);
 		}
-
-		[Fact]
-		public void GuiatString_EnsureDropCSharpForString6IsCorrect()
-		{
-			// ARRANGE
-			var stringNumber = 6;
-			var tuning = "C#2";
-			var maxFrets = 12;
-			var expectedCNoteIndex = 11;
-	
-			// ACT
-			var actual = new GuitarString(stringNumber, tuning, maxFrets);
-			var cNoteIndex = actual.GetNote("C3");
-
-			// ASSERT
-			Assert.Equal(tuning, actual.Tuning);
-			Assert.Equal(expectedCNoteIndex, cNoteIndex);
-		}
-
-		[Fact]
-		public void GuiatString_DropDTuningForString6IsCorrect()
-		{
-			// ARRANGE
-			var stringNumber = 6;
-			var tuning = "D2";
-			var maxFrets = 24;
-			var expectedCNoteIndex = 1;
-
-			// ACT
-			var actual = new GuitarString(stringNumber, tuning, maxFrets);
-			var cNoteIndex = actual.GetNote("D#2");
-
-			// ASSERT
-			Assert.Equal(tuning, actual.Tuning);
-			Assert.Equal(expectedCNoteIndex, cNoteIndex);
-		}
-
-
 	}
 }
