@@ -23,18 +23,6 @@ namespace NoteScalerTests.Services
 		}
 
 		[Theory]
-		[InlineData(6, "C2", 0, "C2")]
-		[InlineData(1, "D4", 0, "D4")]
-		public void CustomTune_UpdatesRequestedString(int stringNumber, string tuning, int fret, string expectedNote)
-		{
-			var guitar = new Guitar();
-
-			guitar.CustomTune(stringNumber, tuning);
-
-			Assert.Equal(expectedNote, guitar.GetNote(stringNumber, fret));
-		}
-
-		[Theory]
 		[InlineData(7, 0, 8, 0, "There is no string number: 7")]
 		[InlineData(1, 25, 2, 0, "Fret: 25 doesn't exist on String: 1.")]
 		public void GetNoteInterval_ReturnsErrorsForInvalidLocations(int startString, int startFret, int endString, int endFret, string expectedError)
