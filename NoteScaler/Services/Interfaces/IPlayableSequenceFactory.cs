@@ -1,6 +1,7 @@
 ﻿namespace NoteScaler.Services.Interfaces
 {
 	using NoteScaler.Config;
+	using NoteScaler.Services;
 
 	public interface IPlayableSequenceFactory
 	{
