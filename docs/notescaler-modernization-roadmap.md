@@ -1,6 +1,6 @@
 # NoteScaler Modernization Roadmap
 
-This roadmap captures the preferred implementation order for modernizing NoteScaler and adding GTAB / video-import support.
+This roadmap captures the preferred implementation order for moving NoteScaler to .NET 10 and adding GTAB / video-import support.
 
 ## Confirmed current baseline
 
@@ -16,13 +16,35 @@ This roadmap captures the preferred implementation order for modernizing NoteSca
 
 ## Desired sequence
 
-1. Modernize the solution structure.
-2. Increase test coverage.
-3. Introduce `IPlayableFileLoader` and implement `GTabPlayableFileLoader` plus any transitional loaders.
-4. Add `.gtab` support.
-5. Add `Import from Video URL` support.
+1. Move the project to .NET 10.
+2. Modernize the solution structure.
+3. Increase test coverage.
+4. Introduce `IPlayableFileLoader` and implement `GTabPlayableFileLoader` plus any transitional loaders.
+5. Add `.gtab` support.
+6. Add `Import from Video URL` support.
 
-## Phase 1: Modernize
+## Phase 1: Move to .NET 10
+
+Goal: retarget the existing app and test projects from `netcoreapp3.1` to `net10.0` before larger architectural changes.
+
+Recommended changes:
+
+- Update `NoteScaler/NoteScaler.csproj` from `netcoreapp3.1` to `net10.0`.
+- Update `NoteScalerTests/NoteScalerTests.csproj` from `netcoreapp3.1` to `net10.0`.
+- Update NuGet package versions that are too old for a clean .NET 10 build/test path.
+- Keep the current solution/project layout intact for this first PR.
+- Keep existing CLI behavior intact.
+- Add or update CI so restore, build, and tests run with .NET 10.
+
+Suggested first PR:
+
+- Branch: `modernize/dotnet-10`
+- Retarget the app and test projects to `net10.0`.
+- Update package references only as needed to build and test cleanly.
+- Add or update GitHub Actions for .NET 10.
+- Do not extract architecture or change playback behavior in this PR.
+
+## Phase 2: Modernize solution structure
 
 Goal: make the current project easier to test and extend before adding new import formats.
 
@@ -36,18 +58,16 @@ Recommended changes:
   - `NoteScaler.Console`
   - `NoteScaler.Tests`
 - Keep the existing CLI behavior working while extracting orchestration away from `Program`.
-- Upgrade the target framework from `netcoreapp3.1` to a supported modern .NET target.
 - Centralize package versions if the solution grows beyond a couple of projects.
-- Add CI that runs restore, build, and tests on every PR.
 
-Suggested first PR:
+Suggested PR:
 
-- Retarget the projects.
-- Add/confirm CI.
+- Branch: `modernize/solution-structure`
 - Extract a testable application service for current command execution.
-- Do not change the public CLI behavior yet.
+- Preserve current CLI behavior.
+- Avoid introducing `.gtab` behavior in this PR.
 
-## Phase 2: Increase test coverage
+## Phase 3: Increase test coverage
 
 Goal: lock down current behavior before changing file-loading architecture.
 
@@ -63,11 +83,12 @@ Coverage targets:
 
 Suggested PR:
 
+- Branch: `test/coverage-baseline`
 - Add characterization tests around existing behavior.
 - Add a coverage report to CI.
 - Avoid refactoring production code unless required to make behavior testable.
 
-## Phase 3: Introduce playable file loaders
+## Phase 4: Introduce playable file loaders
 
 Goal: decouple playable file import from `Program` and `PlayableSequence`.
 
@@ -114,12 +135,13 @@ Likely loaders:
 
 Suggested PR:
 
+- Branch: `feature/playable-file-loaders`
 - Add the interface and request/result models.
 - Move the existing tab JSON behavior into `TabJsonPlayableFileLoader`.
 - Wire the CLI through the loader abstraction.
 - Preserve current behavior.
 
-## Phase 4: Add `.gtab` support
+## Phase 5: Add `.gtab` support
 
 Goal: support a real `.gtab` file format without disrupting existing tab JSON files.
 
@@ -134,12 +156,13 @@ Recommended scope:
 
 Suggested PR:
 
+- Branch: `feature/gtab-loader`
 - Add `NoteScaler.GTab`.
 - Add `GTabPlayableFileLoader`.
 - Add tests for single notes, chords, rests, timing, and malformed GTAB input.
 - Add a CLI option path such as `--gtab <file>` or support format detection by extension.
 
-## Phase 5: Import from Video URL
+## Phase 6: Import from Video URL
 
 Goal: create `.gtab` from a YouTube/video URL when the visible video contains guitar tablature.
 
@@ -176,10 +199,11 @@ Suggested PR sequence:
 
 Recommended branch order:
 
-1. `modernize/solution-structure`
-2. `test/coverage-baseline`
-3. `feature/playable-file-loaders`
-4. `feature/gtab-loader`
-5. `feature/import-from-video-url`
+1. `modernize/dotnet-10`
+2. `modernize/solution-structure`
+3. `test/coverage-baseline`
+4. `feature/playable-file-loaders`
+5. `feature/gtab-loader`
+6. `feature/import-from-video-url`
 
 Each PR should be small enough to review independently and should keep the command-line app runnable.
