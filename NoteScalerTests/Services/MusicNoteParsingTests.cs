@@ -28,7 +28,7 @@ namespace NoteScalerTests.Services
 
 		[Theory]
 		[InlineData("A4", 440, 4, 440F)]
-		[InlineData("A4", 432, 4, 432F)]
+		[InlineData("A5", 432, 5, 864F)]
 		public void Create_UsesRequestedA4ReferenceForCurrentFrequency(string note, int a4Reference, int expectedOctave, float expectedFrequency)
 		{
 			var actual = MusicNote.Create(note, a4Reference);
