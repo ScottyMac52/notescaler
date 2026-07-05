@@ -1,7 +1,6 @@
 namespace NoteScaler.Services
 {
 	using CommandLine;
-	using NoteScaler.Classes;
 	using NoteScaler.Config;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;

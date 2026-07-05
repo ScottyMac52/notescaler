@@ -1,4 +1,4 @@
-﻿namespace NoteScaler.Classes
+﻿namespace NoteScaler.Models
 {
 	public class NoteGroup
 	{

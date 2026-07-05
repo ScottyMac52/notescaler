@@ -1,9 +1,9 @@
 ﻿namespace NoteScaler.Players
 {
-	using NoteScaler.Classes;
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
+	using NoteScaler.Services;
 	using System.Collections.Generic;
 
 	public class MidiNotePlayer : PlayEngineBase, IPlayer

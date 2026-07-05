@@ -1,4 +1,4 @@
-﻿namespace NoteScaler.Classes
+﻿namespace NoteScaler.Services
 {
 	using Newtonsoft.Json;
 	using NoteScaler.Enums;
@@ -295,7 +295,6 @@
 				yield return new CompositeNote(InstrumentType, NotePlayer, noteSequence.Notes, A4Reference);
 			}
 		}
-
 
 		/// <summary>
 		/// Get the String number that is being fretted

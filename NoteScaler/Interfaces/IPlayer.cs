@@ -3,7 +3,7 @@
 	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using System.Collections.Generic;
-	using static NoteScaler.Classes.PlayEngineBase;
+	using static NoteScaler.Services.PlayEngineBase;
 
 	public interface IPlayer
 	{

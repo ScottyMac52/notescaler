@@ -1,4 +1,4 @@
-﻿namespace NoteScaler.Classes
+﻿namespace NoteScaler.Services
 {
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;

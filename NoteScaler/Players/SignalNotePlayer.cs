@@ -1,4 +1,4 @@
-﻿namespace NoteScaler.Classes
+﻿namespace NoteScaler.Services
 {
 	using NAudio.Wave;
 	using NAudio.Wave.SampleProviders;
