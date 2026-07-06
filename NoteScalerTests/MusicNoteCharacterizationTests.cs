@@ -10,7 +10,7 @@ namespace NoteScalerTests
 		[Fact]
 		public void Create_WhenNoteIncludesOctave_PreservesExistingPublicBehavior()
 		{
-			var actual = MusicNote.Create("C3");
+			var actual = MusicNote.Create("C3", duration: 500);
 
 			Assert.NotNull(actual);
 			Assert.True(actual.IsValid);
@@ -33,8 +33,8 @@ namespace NoteScalerTests
 			Assert.Equal("Bb", actual.Key);
 			Assert.Equal(2, actual.DesiredOctave);
 			Assert.Equal(ToneTypes.Flat, actual.ToneType);
-			Assert.Contains("Eb0", actual.MajorScale);
-			Assert.DoesNotContain("D#0", actual.MajorScale);
+			Assert.Contains("Eb1", actual.MajorScale);
+			Assert.DoesNotContain("D#1", actual.MajorScale);
 		}
 	}
 }
