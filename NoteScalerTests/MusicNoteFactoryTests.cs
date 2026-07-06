@@ -23,6 +23,20 @@ namespace NoteScalerTests
 		}
 
 		[Fact]
+		public void Create_WhenNoteIsSharp_UsesSharpNoteContext()
+		{
+			var factory = CreateFactory();
+
+			var actual = factory.Create("C#3");
+
+			Assert.NotNull(actual);
+			Assert.True(actual.IsSharp);
+			Assert.Equal("C#", actual.Key);
+			Assert.Equal("C", actual.NoteBefore);
+			Assert.Equal("D", actual.NoteAfter);
+		}
+
+		[Fact]
 		public void Create_WhenCalledTwiceWithSameNoteAndReference_ReturnsCachedInstanceAndUpdatesRuntimeOptions()
 		{
 			var factory = CreateFactory();
