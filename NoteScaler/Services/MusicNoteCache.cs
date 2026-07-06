@@ -2,7 +2,9 @@ namespace NoteScaler.Services
 {
 	using NoteScaler.Services.Interfaces;
 	using System.Collections.Generic;
+	using System.Diagnostics.CodeAnalysis;
 
+	[ExcludeFromCodeCoverage]
 	public sealed class MusicNoteCache : IMusicNoteCache
 	{
 		private readonly Dictionary<string, MusicNote> notes = new Dictionary<string, MusicNote>();
