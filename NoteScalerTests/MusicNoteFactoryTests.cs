@@ -45,8 +45,8 @@ namespace NoteScalerTests
 			var a442 = factory.Create("A4", a4Reference: 442);
 
 			Assert.NotSame(a440, a442);
-			Assert.Equal(440, a440.CurrentFrequency, 3);
-			Assert.Equal(442, a442.CurrentFrequency, 3);
+			Assert.Equal(440F, a440.CurrentFrequency);
+			Assert.Equal(442F, a442.CurrentFrequency);
 		}
 
 		[Fact]
