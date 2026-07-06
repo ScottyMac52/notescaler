@@ -1,13 +1,7 @@
-﻿namespace NoteScalerTests
+namespace NoteScalerTests
 {
-	using NoteScaler.Config;
-	using NoteScaler.Enums;
-	using NoteScaler.Interfaces;
-	using NoteScaler.Models;
 	using NoteScaler.Services;
-	using NoteScaler.Services.Interfaces;
-	using System;
-	using System.Collections.Generic;
+	using NoteScalerTests.Models;
 	using Xunit;
 
 	public class NoteScalerRunnerTests
@@ -28,50 +22,6 @@
 
 			Assert.Contains(expectedCurrentNoteMessage, consoleOutputService.Messages);
 			Assert.Contains(expectedMajorScaleMessage, consoleOutputService.Messages);
-		}
-
-		private sealed class CapturingConsoleOutputService : IConsoleOutputService
-		{
-			public List<string> Messages { get; } = new List<string>();
-
-			public void WriteMessage(string message, ConsoleColor textColor = ConsoleColor.White)
-			{
-				Messages.Add(message);
-			}
-		}
-
-		private sealed class TestPlayableSequenceFactory : IPlayableSequenceFactory
-		{
-			public PlayableSequence Create(NoteScalerOptions options, int a4Reference)
-			{
-				return new PlayableSequence(() => new NoOpPlayer(), () => new Guitar())
-				{
-					MeasureTime = options.Speed.GetValueOrDefault(),
-					Octave = options.Octave.GetValueOrDefault(),
-					A4Reference = a4Reference,
-					InstrumentType = options.Instrument
-				};
-			}
-		}
-
-		private sealed class UnusedStringInstrumentFactory : IStringInstrumentFactory
-		{
-			public IStringInstrument Create(TuningScheme tuningScheme, int numberOfFrets)
-			{
-				throw new InvalidOperationException($"The string instrument factory should not be used by {nameof(NoteScalerRunnerTests)}.");
-			}
-		}
-
-		private sealed class NoOpPlayer : PlayEngineBase, IPlayer
-		{
-			public override bool CanPause => false;
-
-			public override bool CanStop => false;
-
-			public override void Play(IEnumerable<FrequencyDuration> noteList, InstrumentType instrument)
-			{
-				base.Play(noteList, instrument);
-			}
 		}
 	}
 }
