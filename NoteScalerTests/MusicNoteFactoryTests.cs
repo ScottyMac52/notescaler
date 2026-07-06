@@ -2,6 +2,7 @@ namespace NoteScalerTests
 {
 	using NoteScaler.Enums;
 	using NoteScaler.Services;
+	using System;
 	using Xunit;
 
 	public class MusicNoteFactoryTests
@@ -59,8 +60,8 @@ namespace NoteScalerTests
 			var a442 = factory.Create("A4", a4Reference: 442);
 
 			Assert.NotSame(a440, a442);
-			Assert.Equal(440F, a440.CurrentFrequency);
-			Assert.Equal(442F, a442.CurrentFrequency);
+			Assert.True(Math.Abs(a440.CurrentFrequency - 440F) < 0.001F);
+			Assert.True(Math.Abs(a442.CurrentFrequency - 442F) < 0.001F);
 		}
 
 		[Fact]
