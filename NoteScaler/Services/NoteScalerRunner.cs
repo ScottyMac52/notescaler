@@ -152,7 +152,7 @@ namespace NoteScaler.Services
 				}
 				else
 				{
-					consoleOutputService.WriteMessage($"{noteToCreate} is NOT a valid note!", ConsoleColor.Red);
+					consoleOutputService.WriteMessage($"{note} is NOT a valid note!", ConsoleColor.Red);
 				}
 			}
 		}
