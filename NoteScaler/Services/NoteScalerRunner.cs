@@ -267,11 +267,6 @@ namespace NoteScaler.Services
 		private static IEnumerable<string> ApplyStartingOctave(IEnumerable<string> notes, int startingOctave)
 		{
 			var noteArray = notes.ToArray();
-			if (!noteArray.Any())
-			{
-				return noteArray;
-			}
-
 			var firstOctave = GetNoteOctave(noteArray.First());
 			return noteArray.Select(note => $"{GetNoteName(note)}{startingOctave + GetNoteOctave(note) - firstOctave}");
 		}
@@ -284,7 +279,7 @@ namespace NoteScaler.Services
 		private static int GetNoteOctave(string note)
 		{
 			var octaveString = new string(note.Where(ch => char.IsDigit(ch)).ToArray());
-			return string.IsNullOrEmpty(octaveString) ? 0 : int.Parse(octaveString);
+			return int.Parse(octaveString);
 		}
 	}
 }
