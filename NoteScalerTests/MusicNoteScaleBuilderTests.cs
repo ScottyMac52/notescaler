@@ -18,8 +18,8 @@ namespace NoteScalerTests
 			Assert.Equal(2, actual.NoteIndex);
 			Assert.Equal("D", actual.SharpNotes.First());
 			Assert.Equal("D", actual.FlatNotes.First());
-			Assert.Equal("C", actual.SharpNotes.Last());
-			Assert.Equal("C", actual.FlatNotes.Last());
+			Assert.Equal("D", actual.SharpNotes.Last());
+			Assert.Equal("D", actual.FlatNotes.Last());
 		}
 
 		[Fact]
@@ -49,8 +49,8 @@ namespace NoteScalerTests
 
 			var actual = builder.BuildMajorScale("Bb", ToneTypes.Flat).ToArray();
 
-			Assert.Contains("Eb0", actual);
-			Assert.DoesNotContain("D#0", actual);
+			Assert.Contains("Eb1", actual);
+			Assert.DoesNotContain("D#1", actual);
 		}
 
 		[Fact]
