@@ -77,6 +77,7 @@
 			this.majorChord = majorChord;
 			this.minorChord = minorChord;
 			isValid = true;
+			CreateNote?.Invoke(this, new EventArgs());
 		}
 
 		public string Key { get; }
