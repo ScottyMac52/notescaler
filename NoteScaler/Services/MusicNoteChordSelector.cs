@@ -2,7 +2,9 @@ namespace NoteScaler.Services
 {
 	using NoteScaler.Enums;
 	using NoteScaler.Services.Interfaces;
+	using System.Diagnostics.CodeAnalysis;
 
+	[ExcludeFromCodeCoverage]
 	public sealed class MusicNoteChordSelector : IMusicNoteChordSelector
 	{
 		public string[] SelectChord(MusicNote musicNote)
