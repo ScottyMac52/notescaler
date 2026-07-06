@@ -1,8 +1,10 @@
 ﻿namespace NoteScalerTests
 {
+	using NoteScaler.Enums;
 	using NoteScaler.Services;
 	using System;
 	using System.Collections.Generic;
+	using System.Linq;
 	using Xunit;
 
 	public class GuitarTests
@@ -18,6 +20,28 @@
 			Assert.Equal("D3", guitar.GetNote(5, 5));
 			Assert.Equal("E3", guitar.GetNote(5, 7));
 			Assert.Equal("F3", guitar.GetNote(5, 8));
+		}
+
+		[Fact]
+		public void Guitar_CreatesExpectedOpenStringsForSupportedTunings()
+		{
+			var cases = new[]
+			{
+				new { Tuning = TuningScheme.Standard, Notes = new[] { "E4", "B3", "G3", "D3", "A2", "E2" } },
+				new { Tuning = TuningScheme.DropC, Notes = new[] { "D4", "A3", "F3", "C3", "G2", "C2" } },
+				new { Tuning = TuningScheme.DropCSharp, Notes = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "C#2" } },
+				new { Tuning = TuningScheme.DropD, Notes = new[] { "D4", "B3", "G3", "D3", "A2", "D2" } },
+				new { Tuning = TuningScheme.OpenC, Notes = new[] { "E4", "C3", "G3", "C3", "G2", "C2" } },
+				new { Tuning = TuningScheme.OpenD, Notes = new[] { "D4", "A3", "F#3", "D3", "A2", "D2" } }
+			};
+
+			foreach (var currentCase in cases)
+			{
+				var guitar = new Guitar(currentCase.Tuning);
+				var actualOpenStrings = guitar.Strings.OrderBy(currentString => currentString.Number).Select(currentString => currentString.Tuning).ToArray();
+
+				Assert.Equal(currentCase.Notes, actualOpenStrings);
+			}
 		}
 
 		[Theory]
