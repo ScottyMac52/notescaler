@@ -28,9 +28,9 @@ namespace NoteScalerTests
 		}
 
 		[Theory]
-		[InlineData("-1")]
-		[InlineData("11")]
-		public void Run_WhenNoteOptionIsUsedWithOutOfRangeOctave_WritesValidationMessage(string octave)
+		[InlineData(new[] { "--note", "C", "--octave=-1" }, "-1")]
+		[InlineData(new[] { "--note", "C", "--octave", "11" }, "11")]
+		public void Run_WhenNoteOptionIsUsedWithOutOfRangeOctave_WritesValidationMessage(string[] args, string expectedOctave)
 		{
 			var consoleOutputService = new CapturingConsoleOutputService();
 			var runner = new NoteScalerRunner(
@@ -39,9 +39,9 @@ namespace NoteScalerTests
 				new UnusedStringInstrumentFactory(),
 				consoleOutputService);
 
-			runner.Run(new[] { "--note", "C", "--octave", octave });
+			runner.Run(args);
 
-			Assert.Contains($"Octave {octave} is out of range. Valid scale starting octaves are 0 through 10.", consoleOutputService.Messages);
+			Assert.Contains($"Octave {expectedOctave} is out of range. Valid scale starting octaves are 0 through 10.", consoleOutputService.Messages);
 		}
 	}
 }
