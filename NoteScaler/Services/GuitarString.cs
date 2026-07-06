@@ -3,7 +3,6 @@
 	using BidirectionalMap;
 	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
-	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 
@@ -104,8 +103,7 @@
 
 		private void InitializeFretBoard()
 		{
-			var startingNote = Array.FindIndex(NoteIndex.Notes, note => note.Equals(Tuning));
-			var notes = NoteIndex.Notes.Skip(startingNote).Take(MaxFret + 1);
+			var notes = PitchIndex.Default.GetNotesStartingAt(Tuning, MaxFret + 1);
 			var startingIndex = 0;
 			foreach (var note in notes)
 			{
