@@ -9,6 +9,16 @@
 
 	public class Guitar : IStringInstrument
 	{
+		private static readonly IReadOnlyDictionary<TuningScheme, string[]> TuningDefinitions = new Dictionary<TuningScheme, string[]>
+		{
+			[TuningScheme.Standard] = new[] { "E4", "B3", "G3", "D3", "A2", "E2" },
+			[TuningScheme.DropC] = new[] { "D4", "A3", "F3", "C3", "G2", "C2" },
+			[TuningScheme.DropCSharp] = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "C#2" },
+			[TuningScheme.DropD] = new[] { "D4", "B3", "G3", "D3", "A2", "D2" },
+			[TuningScheme.OpenC] = new[] { "E4", "C3", "G3", "C3", "G2", "C2" },
+			[TuningScheme.OpenD] = new[] { "D4", "A3", "F#3", "D3", "A2", "D2" }
+		};
+
 		/// <summary>
 		/// Copnstructs a Guitar!
 		/// </summary>
@@ -116,81 +126,11 @@
 			return $"Guitar tuned to {TuningScheme}. Strings {string.Join('|', Strings.Reverse().Select(s => s.Tuning))}";
 		}
 
-		// TODO: Only Supports 6 strings 
 		private void InitializeStrings()
 		{
-			switch (TuningScheme)
-			{
-				case TuningScheme.Standard:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "E4", Frets),
-						new GuitarString(2, "B3", Frets),
-						new GuitarString(3, "G3", Frets),
-						new GuitarString(4, "D3", Frets),
-						new GuitarString(5, "A2", Frets),
-						new GuitarString(6, "E2", Frets)
-					};
-					break;
-
-				case TuningScheme.DropC:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "D4", Frets),
-						new GuitarString(2, "A3", Frets),
-						new GuitarString(3, "F3", Frets),
-						new GuitarString(4, "C3", Frets),
-						new GuitarString(5, "G2", Frets),
-						new GuitarString(6, "C2", Frets)
-					};
-					break;
-
-				case TuningScheme.DropCSharp:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "D#4", Frets),
-						new GuitarString(2, "A#3", Frets),
-						new GuitarString(3, "F#3", Frets),
-						new GuitarString(4, "C#3", Frets),
-						new GuitarString(5, "G#2", Frets),
-						new GuitarString(6, "C#2", Frets)
-					};
-					break;
-
-				case TuningScheme.DropD:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "D4", Frets),
-						new GuitarString(2, "B3", Frets),
-						new GuitarString(3, "G3", Frets),
-						new GuitarString(4, "D3", Frets),
-						new GuitarString(5, "A2", Frets),
-						new GuitarString(6, "D2", Frets)
-					};
-					break;
-				case TuningScheme.OpenC:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "E4", Frets),
-						new GuitarString(2, "C3", Frets),
-						new GuitarString(3, "G3", Frets),
-						new GuitarString(4, "C3", Frets),
-						new GuitarString(5, "G2", Frets),
-						new GuitarString(6, "C2", Frets)
-					};
-					break;
-				case TuningScheme.OpenD:
-					Strings = new List<IInstrumentString>()
-					{
-						new GuitarString(1, "D4", Frets),
-						new GuitarString(2, "A3", Frets),
-						new GuitarString(3, "F#3", Frets),
-						new GuitarString(4, "D3", Frets),
-						new GuitarString(5, "A2", Frets),
-						new GuitarString(6, "D2", Frets)
-					};
-					break;
-			}
+			Strings = TuningDefinitions[TuningScheme]
+				.Select((note, index) => new GuitarString(index + 1, note, Frets))
+				.ToList();
 		}
 	}
 }
