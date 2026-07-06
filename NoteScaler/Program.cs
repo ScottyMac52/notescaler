@@ -23,6 +23,12 @@
 			services.AddSingleton<IConsoleOutputService, ConsoleOutputService>();
 			services.AddSingleton<IPlayerFactory, SignalNotePlayerFactory>();
 			services.AddSingleton<IStringInstrumentFactory, StringInstrumentFactory>();
+			services.AddSingleton<IMusicNoteCache, MusicNoteCache>();
+			services.AddSingleton<MusicNoteScaleBuilder>();
+			services.AddSingleton<MusicNoteFrequencyCalculator>();
+			services.AddSingleton<IMusicNoteFactory, MusicNoteFactory>();
+			services.AddSingleton<IMusicNoteChordSelector, MusicNoteChordSelector>();
+			services.AddSingleton<IMusicNotePlayer, MusicNotePlayer>();
 			services.AddSingleton<IPlayableSequenceFactory, PlayableSequenceFactory>();
 			services.AddSingleton<INoteScalerRunner, NoteScalerRunner>();
 
