@@ -2,17 +2,23 @@ namespace NoteScalerTests
 {
 	using NoteScaler.Enums;
 	using NoteScaler.Services;
+	using System.Collections.Generic;
 	using Xunit;
 
 	public class MusicNoteChordSelectorTests
 	{
+		public static IEnumerable<object[]> ChordCases => new[]
+		{
+			new object[] { ChordType.Note, new[] { "C" } },
+			new object[] { ChordType.Power, new[] { "C0", "G0" } },
+			new object[] { ChordType.MinorThird, new[] { "C0", "D0", "D#0" } },
+			new object[] { ChordType.MajorThird, new[] { "C0", "E0", "G0" } },
+			new object[] { ChordType.MinorSeventh, new[] { "C0", "D0", "D#0", "F0", "G0" } },
+			new object[] { ChordType.MajorSeventh, new[] { "C0", "E0", "G0", "B0", "D0" } }
+		};
+
 		[Theory]
-		[InlineData(ChordType.Note, new[] { "C" })]
-		[InlineData(ChordType.Power, new[] { "C0", "G0" })]
-		[InlineData(ChordType.MinorThird, new[] { "C0", "D0", "D#0" })]
-		[InlineData(ChordType.MajorThird, new[] { "C0", "E0", "G0" })]
-		[InlineData(ChordType.MinorSeventh, new[] { "C0", "D0", "D#0", "F0", "G0" })]
-		[InlineData(ChordType.MajorSeventh, new[] { "C0", "E0", "G0", "B0", "D0" })]
+		[MemberData(nameof(ChordCases))]
 		public void SelectChord_ReturnsExpectedNotesForChordType(ChordType chordType, string[] expectedNotes)
 		{
 			var factory = new MusicNoteFactory(new MusicNoteCache(), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator());
