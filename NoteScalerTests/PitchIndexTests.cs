@@ -26,6 +26,9 @@ namespace NoteScalerTests
 		[InlineData("B8", true)]
 		[InlineData("H2", false)]
 		[InlineData("C9", false)]
+		[InlineData(null, false)]
+		[InlineData("", false)]
+		[InlineData(" ", false)]
 		public void Contains_ReturnsWhetherNoteIsSupported(string note, bool expectedResult)
 		{
 			var actual = PitchIndex.Default.Contains(note);
@@ -54,12 +57,30 @@ namespace NoteScalerTests
 			Assert.Equal("C1", actual);
 		}
 
+		[Theory]
+		[InlineData("C0", -1)]
+		[InlineData("B8", 1)]
+		public void GetNoteAbove_WhenOffsetLeavesSupportedRange_ThrowsOutOfRangeException(string note, int semitones)
+		{
+			var exception = Assert.Throws<ArgumentOutOfRangeException>(() => PitchIndex.Default.GetNoteAbove(note, semitones));
+
+			Assert.Contains(note, exception.Message);
+		}
+
 		[Fact]
 		public void GetNotesStartingAt_ReturnsRequestedChromaticSequence()
 		{
 			var actual = PitchIndex.Default.GetNotesStartingAt("E2", 5).ToArray();
 
 			Assert.Equal(new[] { "E2", "F2", "F#2", "G2", "G#2" }, actual);
+		}
+
+		[Fact]
+		public void GetNotesStartingAt_WhenCountIsNegative_ThrowsOutOfRangeException()
+		{
+			var exception = Assert.Throws<ArgumentOutOfRangeException>(() => PitchIndex.Default.GetNotesStartingAt("E2", -1).ToArray());
+
+			Assert.Contains("Count cannot be negative.", exception.Message);
 		}
 
 		[Fact]
