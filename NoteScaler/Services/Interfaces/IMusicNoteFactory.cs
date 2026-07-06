@@ -2,6 +2,7 @@ namespace NoteScaler.Services.Interfaces
 {
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
+	using NoteScaler.Services;
 
 	public interface IMusicNoteFactory
 	{
