@@ -87,7 +87,7 @@
 		/// <inheritdoc/>
 		public int GetNoteInterval(string startNote, string endNote)
 		{
-			return Array.IndexOf(NoteIndex.Notes, endNote) - Array.IndexOf(NoteIndex.Notes, startNote);
+			return PitchIndex.Default.GetInterval(startNote, endNote);
 		}
 
 		/// <inheritdoc/>

@@ -1,6 +1,7 @@
 namespace NoteScalerTests
 {
 	using NoteScaler.Services;
+	using System;
 	using Xunit;
 
 	public class GuitarStringTests
@@ -17,6 +18,14 @@ namespace NoteScalerTests
 
 			Assert.Equal(tuning, actual.Tuning);
 			Assert.Equal(expectedFret, fret);
+		}
+
+		[Fact]
+		public void GuitarString_WhenTuningIsUnsupported_ThrowsControlledException()
+		{
+			var exception = Assert.Throws<ArgumentException>(() => new GuitarString(1, "Nope", 21));
+
+			Assert.Contains("Nope", exception.Message);
 		}
 	}
 }
