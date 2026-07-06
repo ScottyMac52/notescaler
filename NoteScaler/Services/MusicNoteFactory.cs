@@ -66,8 +66,9 @@ namespace NoteScaler.Services
 			var majorScale = scaleBuilder.BuildMajorScale(token.Name, token.ToneType, context).ToArray();
 			var relativeMinor = majorScale.ElementAt(RELATIVE_MINOR_POSITION);
 			var relativeMajor = majorScale.ElementAt(RELATIVE_MAJOR_POSITION);
-			var noteBefore = GetNoteBefore(token.Name, GetAllNotes(token.ToneType, flatNotes, sharpNotes));
-			var noteAfter = GetNoteAfter(token.Name, GetAllNotes(token.ToneType, flatNotes, sharpNotes));
+			var allNotes = GetAllNotes(token.ToneType, flatNotes, sharpNotes);
+			var noteBefore = GetNoteBefore(token.Name, allNotes);
+			var noteAfter = GetNoteAfter(token.Name, allNotes);
 			var minorNoteBefore = GetNoteBefore(token.Name, minorScale);
 			var minorNoteAfter = GetNoteAfter(token.Name, minorScale);
 			var majorNoteBefore = GetNoteBefore(token.Name, majorScale);
@@ -116,7 +117,7 @@ namespace NoteScaler.Services
 		{
 			var notes = noteList.ToArray();
 			var currentPosition = Array.FindIndex(notes, note => note.Contains(key));
-			var targetPosition = currentPosition == 0 ? notes.Count() - 2 : currentPosition - 1;
+			var targetPosition = (currentPosition + notes.Count() - 2) % (notes.Count() - 1);
 			return notes.ElementAt(targetPosition);
 		}
 
@@ -124,7 +125,7 @@ namespace NoteScaler.Services
 		{
 			var notes = noteList.ToArray();
 			var currentPosition = Array.FindIndex(notes, note => note.Contains(key));
-			var targetPosition = currentPosition == 12 ? 0 : currentPosition + 1;
+			var targetPosition = (currentPosition + 1) % notes.Count();
 			return notes.ElementAt(targetPosition);
 		}
 
