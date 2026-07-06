@@ -55,7 +55,11 @@ namespace NoteScalerTests
 			public InstrumentType Instrument { get; private set; }
 			public bool CanPause => false;
 			public bool CanStop => false;
-			public event PlayerEventHandler PlayerEvent;
+			public event PlayerEventHandler PlayerEvent
+			{
+				add { }
+				remove { }
+			}
 
 			public void Play(IEnumerable<FrequencyDuration> noteList, InstrumentType instrument)
 			{
