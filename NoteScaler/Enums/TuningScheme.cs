@@ -15,6 +15,18 @@
 		[JsonProperty("openC")]
 		OpenC,
 		[JsonProperty("openD")]
-		OpenD
+		OpenD,
+		[JsonProperty("dropB")]
+		DropB,
+		[JsonProperty("dStandard")]
+		DStandard,
+		[JsonProperty("ebStandard")]
+		EbStandard,
+		[JsonProperty("cSharpStandard")]
+		CSharpStandard,
+		[JsonProperty("dadgad")]
+		DADGAD,
+		[JsonProperty("openG")]
+		OpenG
 	}
 }
