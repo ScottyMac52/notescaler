@@ -12,6 +12,9 @@ namespace NoteScaler.Services
 
 	public sealed class NoteScalerRunner : INoteScalerRunner
 	{
+		private const int MINIMUM_SCALE_STARTING_OCTAVE = 0;
+		private const int MAXIMUM_SCALE_STARTING_OCTAVE = 10;
+
 		private readonly ICommandLineOptionsService commandLineOptionsService;
 		private readonly IPlayableSequenceFactory playableSequenceFactory;
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
@@ -48,7 +51,7 @@ namespace NoteScaler.Services
 				var playableSequence = playableSequenceFactory.Create(options, a4Reference);
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
-				PlayNoteAsRequired(options.Note, a4Reference, playableSequence);
+				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
 				PlayTabAsRequired(tabName, playableSequence);
 				PlaySongAsRequired(key, fileName, playableSequence);
 			}
@@ -112,11 +115,19 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlayNoteAsRequired(string note, int a4Reference, PlayableSequence playableSequence)
+		private void PlayNoteAsRequired(string note, int octave, int a4Reference, PlayableSequence playableSequence)
 		{
 			if (note != null)
 			{
-				var musicNote = MusicNote.Create(note, a4Reference);
+				var effectiveOctave = GetEffectiveOctave(note, octave);
+				if (!IsValidScaleStartingOctave(effectiveOctave))
+				{
+					consoleOutputService.WriteMessage($"Octave {effectiveOctave} is out of range. Valid scale starting octaves are {MINIMUM_SCALE_STARTING_OCTAVE} through {MAXIMUM_SCALE_STARTING_OCTAVE}.", ConsoleColor.Red);
+					return;
+				}
+
+				var noteToCreate = GetNoteWithOctave(note, octave);
+				var musicNote = MusicNote.Create(noteToCreate, a4Reference);
 				if (musicNote?.IsValid ?? false)
 				{
 					ShowNote(musicNote);
@@ -139,7 +150,7 @@ namespace NoteScaler.Services
 				}
 				else
 				{
-					consoleOutputService.WriteMessage($"{note} is NOT a valid note!", ConsoleColor.Red);
+					consoleOutputService.WriteMessage($"{noteToCreate} is NOT a valid note!", ConsoleColor.Red);
 				}
 			}
 		}
@@ -223,6 +234,32 @@ namespace NoteScaler.Services
 			consoleOutputService.WriteMessage($"The relative minor is {relativeMinor}m");
 			consoleOutputService.WriteMessage($"The relative minor scale is {string.Join(',', musicNote.RelativeMinorScale)}");
 			consoleOutputService.WriteMessage($"The relative Major to the minor is {relativeMajor}");
+		}
+
+		private static int GetEffectiveOctave(string note, int octave)
+		{
+			if (!NoteContainsOctave(note))
+			{
+				return octave;
+			}
+
+			var octaveString = new string(note.Where(ch => char.IsDigit(ch)).ToArray());
+			return int.Parse(octaveString);
+		}
+
+		private static string GetNoteWithOctave(string note, int octave)
+		{
+			return NoteContainsOctave(note) ? note : $"{note}{octave}";
+		}
+
+		private static bool IsValidScaleStartingOctave(int octave)
+		{
+			return octave >= MINIMUM_SCALE_STARTING_OCTAVE && octave <= MAXIMUM_SCALE_STARTING_OCTAVE;
+		}
+
+		private static bool NoteContainsOctave(string note)
+		{
+			return note.Any(ch => char.IsDigit(ch));
 		}
 	}
 }
