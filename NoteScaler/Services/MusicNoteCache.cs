@@ -8,6 +8,12 @@ namespace NoteScaler.Services
 	public sealed class MusicNoteCache : IMusicNoteCache
 	{
 		private readonly Dictionary<string, MusicNote> notes = new Dictionary<string, MusicNote>();
+		private readonly bool includeReferenceInKey;
+
+		public MusicNoteCache(bool includeReferenceInKey = true)
+		{
+			this.includeReferenceInKey = includeReferenceInKey;
+		}
 
 		public bool TryGet(string note, int a4Reference, out MusicNote musicNote)
 		{
@@ -19,9 +25,9 @@ namespace NoteScaler.Services
 			notes[GetCacheKey(note, a4Reference)] = musicNote;
 		}
 
-		private static string GetCacheKey(string note, int a4Reference)
+		private string GetCacheKey(string note, int a4Reference)
 		{
-			return $"{a4Reference}:{note}";
+			return includeReferenceInKey ? $"{a4Reference}:{note}" : note;
 		}
 	}
 }
