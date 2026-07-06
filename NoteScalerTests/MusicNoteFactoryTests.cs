@@ -3,6 +3,7 @@ namespace NoteScalerTests
 	using NoteScaler.Enums;
 	using NoteScaler.Services;
 	using System;
+	using System.Linq;
 	using Xunit;
 
 	public class MusicNoteFactoryTests
@@ -33,8 +34,8 @@ namespace NoteScalerTests
 			Assert.NotNull(actual);
 			Assert.True(actual.IsSharp);
 			Assert.Equal("C#", actual.Key);
-			Assert.Equal("C", actual.NoteBefore);
-			Assert.Equal("D", actual.NoteAfter);
+			Assert.Contains("C#", actual.SharpNotes);
+			Assert.DoesNotContain("Db", actual.SharpNotes);
 		}
 
 		[Fact]
