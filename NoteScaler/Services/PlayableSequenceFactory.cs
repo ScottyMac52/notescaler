@@ -8,18 +8,21 @@ namespace NoteScaler.Services
 	{
 		private readonly IPlayerFactory playerFactory;
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
+		private readonly IMusicNoteFactory musicNoteFactory;
 
-		public PlayableSequenceFactory(IPlayerFactory playerFactory, IStringInstrumentFactory stringInstrumentFactory)
+		public PlayableSequenceFactory(IPlayerFactory playerFactory, IStringInstrumentFactory stringInstrumentFactory, IMusicNoteFactory musicNoteFactory)
 		{
 			this.playerFactory = playerFactory;
 			this.stringInstrumentFactory = stringInstrumentFactory;
+			this.musicNoteFactory = musicNoteFactory;
 		}
 
 		public PlayableSequence Create(NoteScalerOptions options, int a4Reference)
 		{
 			return new PlayableSequence(
 				playerFactory.Create,
-				() => stringInstrumentFactory.Create(TuningScheme.Standard, 24))
+				() => stringInstrumentFactory.Create(TuningScheme.Standard, 24),
+				musicNoteFactory)
 			{
 				MeasureTime = options.Speed.GetValueOrDefault(),
 				Octave = options.Octave.GetValueOrDefault(),
