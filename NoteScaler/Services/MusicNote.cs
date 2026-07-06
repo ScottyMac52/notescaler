@@ -15,7 +15,7 @@
 		private const string SHARP_NOTE = "#";
 		private const string FLAT_NOTE = "b";
 
-		private static readonly IMusicNoteFactory DefaultFactory = new MusicNoteFactory(new MusicNoteCache(), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator());
+		private static readonly IMusicNoteFactory DefaultFactory = new MusicNoteFactory(new MusicNoteCache(false), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator());
 		private static readonly IMusicNotePlayer DefaultPlayer = new MusicNotePlayer(DefaultFactory, new MusicNoteChordSelector());
 
 		private readonly bool isValid;
