@@ -10,6 +10,11 @@ namespace NoteScaler.Services
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
 		private readonly IMusicNoteFactory musicNoteFactory;
 
+		public PlayableSequenceFactory(IPlayerFactory playerFactory, IStringInstrumentFactory stringInstrumentFactory)
+			: this(playerFactory, stringInstrumentFactory, new MusicNoteFactory(new MusicNoteCache(), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator()))
+		{
+		}
+
 		public PlayableSequenceFactory(IPlayerFactory playerFactory, IStringInstrumentFactory stringInstrumentFactory, IMusicNoteFactory musicNoteFactory)
 		{
 			this.playerFactory = playerFactory;
