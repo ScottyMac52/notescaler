@@ -135,5 +135,30 @@
 
 			Assert.Equal(7, actualInterval);
 		}
+
+		[Theory]
+		[InlineData("C3", "C4", 12)]
+		[InlineData("C4", "C3", -12)]
+		[InlineData("E2", "C3", 8)]
+		public void GetNoteInterval_ReturnsExpectedSemitones(string startNote, string endNote, int expectedInterval)
+		{
+			var guitar = new Guitar();
+
+			var actualInterval = guitar.GetNoteInterval(startNote, endNote);
+
+			Assert.Equal(expectedInterval, actualInterval);
+		}
+
+		[Theory]
+		[InlineData("Nope", "C3")]
+		[InlineData("C3", "Nope")]
+		public void GetNoteInterval_WhenNoteIsUnsupported_ThrowsControlledException(string startNote, string endNote)
+		{
+			var guitar = new Guitar();
+
+			var exception = Assert.Throws<ArgumentException>(() => guitar.GetNoteInterval(startNote, endNote));
+
+			Assert.Contains("Unsupported note", exception.Message);
+		}
 	}
 }
