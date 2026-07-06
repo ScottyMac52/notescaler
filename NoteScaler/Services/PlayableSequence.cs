@@ -4,6 +4,7 @@
 	using NoteScaler.Enums;
 	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
+	using NoteScaler.Services.Interfaces;
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
@@ -16,6 +17,7 @@
 	{
 		private readonly Func<IPlayer> notePlayerFactory;
 		private readonly Func<IStringInstrument> stringInstrumentFactory;
+		private readonly IMusicNoteFactory musicNoteFactory;
 
 		#region Public properties
 
@@ -42,14 +44,20 @@
 		#region Constructors
 
 		public PlayableSequence()
-			: this(() => new SignalNotePlayer(), () => new Guitar())
+			: this(() => new SignalNotePlayer(), () => new Guitar(), new MusicNoteFactory(new MusicNoteCache(), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator()))
 		{
 		}
 
 		public PlayableSequence(Func<IPlayer> notePlayerFactory, Func<IStringInstrument> stringInstrumentFactory)
+			: this(notePlayerFactory, stringInstrumentFactory, new MusicNoteFactory(new MusicNoteCache(), new MusicNoteScaleBuilder(), new MusicNoteFrequencyCalculator()))
+		{
+		}
+
+		public PlayableSequence(Func<IPlayer> notePlayerFactory, Func<IStringInstrument> stringInstrumentFactory, IMusicNoteFactory musicNoteFactory)
 		{
 			this.notePlayerFactory = notePlayerFactory ?? throw new ArgumentNullException(nameof(notePlayerFactory));
 			this.stringInstrumentFactory = stringInstrumentFactory ?? throw new ArgumentNullException(nameof(stringInstrumentFactory));
+			this.musicNoteFactory = musicNoteFactory ?? throw new ArgumentNullException(nameof(musicNoteFactory));
 		}
 
 		#endregion Constructors
@@ -292,7 +300,7 @@
 		{
 			foreach (var noteSequence in NoteSequence)
 			{
-				yield return new CompositeNote(InstrumentType, NotePlayer, noteSequence.Notes, A4Reference);
+				yield return new CompositeNote(InstrumentType, NotePlayer, noteSequence.Notes, A4Reference, musicNoteFactory);
 			}
 		}
 
@@ -336,7 +344,7 @@
 				note = arry[0];
 
 				// check for Octave
-				if(!note.Any(ch => char.IsDigit(ch)))
+				if (!note.Any(ch => char.IsDigit(ch)))
 				{
 					note = $"{note}{Octave}";
 				}
