@@ -3,6 +3,7 @@ namespace NoteScalerTests.Services
 	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using NoteScaler.Services;
+	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using Xunit;
@@ -19,6 +20,19 @@ namespace NoteScalerTests.Services
 
 			playableSequence.ConvertSongNotesToNoteSequence(song);
 
+			AssertNoteGroups(expectedGroups, playableSequence.NoteSequence);
+		}
+
+		[Theory]
+		[InlineData("C,D-0.5,E4-2", "C3-1000|D3-500|E4-2000")]
+		[InlineData("C|E|G,A", "C3-1000,E3-1000,G3-1000|A3-1000")]
+		public void LoadSequenceFromString_ConvertsSongNotationWhenSongHasNotBeenInitialized(string sequence, string expectedGroups)
+		{
+			var playableSequence = CreateSequence();
+
+			var exception = Record.Exception(() => playableSequence.LoadSequenceFromString(sequence.Split(',')));
+
+			Assert.Null(exception);
 			AssertNoteGroups(expectedGroups, playableSequence.NoteSequence);
 		}
 

@@ -122,7 +122,7 @@
 		/// <param name="sequence"></param>
 		public void LoadSequenceFromString(IEnumerable<string> sequence)
 		{
-			Song.SetNoteSequence(sequence.ToArray());
+			NoteSequence = CreatePlayableNotesFromSongNotes(sequence.ToArray());
 			PrepareSequence();
 			PlayableSequenceEvent?.Invoke(this, new PlayableSequenceEvent()
 			{

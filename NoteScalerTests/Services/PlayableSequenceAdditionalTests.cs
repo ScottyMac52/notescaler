@@ -42,7 +42,7 @@ namespace NoteScalerTests.Services
 		}
 
 		[Fact]
-		public void LoadSequenceFromString_RaisesEventForCurrentNoteSequence()
+		public void LoadSequenceFromString_LoadsRequestedSequenceAndRaisesEvent()
 		{
 			var playableSequence = CreateSequence(new TestPlayer());
 			PlayableSequenceEvent captured = null;
@@ -53,8 +53,9 @@ namespace NoteScalerTests.Services
 
 			Assert.NotNull(captured);
 			Assert.Equal(PlayableEventType.SequenceLoaded, captured.EventType);
-			Assert.Equal("1 Notes loaded.", captured.EventDetails);
-			Assert.Equal(new[] { "C3-1000" }, playableSequence.NoteSequence.Single().Notes);
+			Assert.Equal("2 Notes loaded.", captured.EventDetails);
+			Assert.Equal(new[] { "D3-1000" }, playableSequence.NoteSequence.First().Notes);
+			Assert.Equal(new[] { "E3-500" }, playableSequence.NoteSequence.Last().Notes);
 		}
 
 		[Fact]
