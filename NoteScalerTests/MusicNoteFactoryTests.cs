@@ -28,11 +28,11 @@ namespace NoteScalerTests
 			var factory = CreateFactory();
 			var first = factory.Create("A4", duration: 250, currentInstrument: InstrumentType.Horn);
 
-			var second = factory.Create("A4", duration: 1000, currentInstrument: InstrumentType.Guitar, chordType: ChordType.Power);
+			var second = factory.Create("A4", duration: 1000, currentInstrument: InstrumentType.Recorder, chordType: ChordType.Power);
 
 			Assert.Same(first, second);
 			Assert.Equal(1000, second.Duration);
-			Assert.Equal(InstrumentType.Guitar, second.Instrument);
+			Assert.Equal(InstrumentType.Recorder, second.Instrument);
 			Assert.Equal(ChordType.Power, second.ChordType);
 		}
 
