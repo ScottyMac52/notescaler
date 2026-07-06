@@ -23,7 +23,7 @@ namespace NoteScalerTests
 			service.Play(note);
 
 			Assert.Equal(InstrumentType.Flute, player.Instrument);
-			Assert.Equal(new[] { "C", "G" }, player.PlayedNotes.Select(note => note.Key).ToArray());
+			Assert.Equal(new[] { "C", "G" }, player.PlayedNotes.Select(note => note.Note).ToArray());
 			Assert.All(player.PlayedNotes, note => Assert.Equal(250, note.Duration));
 		}
 
