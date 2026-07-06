@@ -7,11 +7,15 @@ namespace NoteScaler.Services
 	using NoteScaler.Models;
 	using NoteScaler.Services.Interfaces;
 	using System;
+	using System.Collections.Generic;
 	using System.Linq;
 	using System.Threading;
 
 	public sealed class NoteScalerRunner : INoteScalerRunner
 	{
+		private const int MINIMUM_SCALE_STARTING_OCTAVE = 0;
+		private const int MAXIMUM_SCALE_STARTING_OCTAVE = 10;
+
 		private readonly ICommandLineOptionsService commandLineOptionsService;
 		private readonly IPlayableSequenceFactory playableSequenceFactory;
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
@@ -48,7 +52,7 @@ namespace NoteScaler.Services
 				var playableSequence = playableSequenceFactory.Create(options, a4Reference);
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
-				PlayNoteAsRequired(options.Note, a4Reference, playableSequence);
+				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
 				PlayTabAsRequired(tabName, playableSequence);
 				PlaySongAsRequired(key, fileName, playableSequence);
 			}
@@ -112,28 +116,37 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlayNoteAsRequired(string note, int a4Reference, PlayableSequence playableSequence)
+		private void PlayNoteAsRequired(string note, int octave, int a4Reference, PlayableSequence playableSequence)
 		{
 			if (note != null)
 			{
-				var musicNote = MusicNote.Create(note, a4Reference);
+				var effectiveOctave = GetEffectiveOctave(note, octave);
+				if (!IsValidScaleStartingOctave(effectiveOctave))
+				{
+					consoleOutputService.WriteMessage($"Octave {effectiveOctave} is out of range. Valid scale starting octaves are {MINIMUM_SCALE_STARTING_OCTAVE} through {MAXIMUM_SCALE_STARTING_OCTAVE}.", ConsoleColor.Red);
+					return;
+				}
+
+				var noteToCreate = GetNoteWithOctave(note, octave);
+				var musicNote = MusicNote.Create(noteToCreate, a4Reference);
 				if (musicNote?.IsValid ?? false)
 				{
 					ShowNote(musicNote);
-					var musicNotes = musicNote.MajorScale.ToArray();
+					var musicNotes = ApplyStartingOctave(musicNote.MajorScale, musicNote.DesiredOctave).ToArray();
 					consoleOutputService.WriteMessage($"Playing Major Scale: {string.Join(',', musicNotes)}");
-					playableSequence.LoadSequenceFromString(musicNote.MajorScale);
+					playableSequence.LoadSequenceFromString(musicNotes);
 					playableSequence.Prepare();
 					playableSequence.Play();
 					Thread.Sleep(1000);
-					musicNotes = musicNote.MinorScale.ToArray();
+					musicNotes = ApplyStartingOctave(musicNote.MinorScale, musicNote.DesiredOctave).ToArray();
 					consoleOutputService.WriteMessage($"Playing Minor Scale: {string.Join(',', musicNotes)}");
-					playableSequence.LoadSequenceFromString(musicNote.MinorScale);
+					playableSequence.LoadSequenceFromString(musicNotes);
 					playableSequence.Prepare();
 					playableSequence.Play();
 					Thread.Sleep(1000);
-					consoleOutputService.WriteMessage($"Playing Relative Minor Scale {musicNote.RelativeMinor}m: {string.Join(',', musicNote.RelativeMinorScale)}");
-					playableSequence.LoadSequenceFromString(musicNote.RelativeMinorScale);
+					musicNotes = ApplyStartingOctave(musicNote.RelativeMinorScale, musicNote.DesiredOctave).ToArray();
+					consoleOutputService.WriteMessage($"Playing Relative Minor Scale {musicNote.RelativeMinor}m: {string.Join(',', musicNotes)}");
+					playableSequence.LoadSequenceFromString(musicNotes);
 					playableSequence.Prepare();
 					playableSequence.Play();
 				}
@@ -217,12 +230,56 @@ namespace NoteScaler.Services
 			consoleOutputService.WriteMessage($"Of the 12 natural, flat and sharp notes {musicNote} has {musicNote.NoteBefore} before it and {musicNote.NoteAfter} after it.");
 			consoleOutputService.WriteMessage($"Of the 7 notes in the {musicNote} scale {musicNote} has {musicNote.MajorNoteBefore} before it and {musicNote.MajorNoteAfter} after it.");
 			consoleOutputService.WriteMessage($"Of the 7 notes in the {musicNote}m scale {musicNote} has {musicNote.MinorNoteBefore} before it and {musicNote.MinorNoteAfter} after it.");
-			consoleOutputService.WriteMessage($"Notes in {musicNote} are: {string.Join(',', musicNote.MajorScale)}");
-			consoleOutputService.WriteMessage($"Notes in {musicNote}m are: {string.Join(',', musicNote.MinorScale)}");
-			consoleOutputService.WriteMessage($"Major Chord: {string.Join(',', musicNote.MajorChord15)} minor Chord: {string.Join(',', musicNote.MinorChord15)}");
+			consoleOutputService.WriteMessage($"Notes in {musicNote} are: {string.Join(',', ApplyStartingOctave(musicNote.MajorScale, musicNote.DesiredOctave))}");
+			consoleOutputService.WriteMessage($"Notes in {musicNote}m are: {string.Join(',', ApplyStartingOctave(musicNote.MinorScale, musicNote.DesiredOctave))}");
+			consoleOutputService.WriteMessage($"Major Chord: {string.Join(',', ApplyStartingOctave(musicNote.MajorChord15, musicNote.DesiredOctave))} minor Chord: {string.Join(',', ApplyStartingOctave(musicNote.MinorChord15, musicNote.DesiredOctave))}");
 			consoleOutputService.WriteMessage($"The relative minor is {relativeMinor}m");
-			consoleOutputService.WriteMessage($"The relative minor scale is {string.Join(',', musicNote.RelativeMinorScale)}");
+			consoleOutputService.WriteMessage($"The relative minor scale is {string.Join(',', ApplyStartingOctave(musicNote.RelativeMinorScale, musicNote.DesiredOctave))}");
 			consoleOutputService.WriteMessage($"The relative Major to the minor is {relativeMajor}");
+		}
+
+		private static int GetEffectiveOctave(string note, int octave)
+		{
+			if (!NoteContainsOctave(note))
+			{
+				return octave;
+			}
+
+			var octaveString = new string(note.Where(ch => char.IsDigit(ch)).ToArray());
+			return int.Parse(octaveString);
+		}
+
+		private static string GetNoteWithOctave(string note, int octave)
+		{
+			return NoteContainsOctave(note) ? note : $"{note}{octave}";
+		}
+
+		private static bool IsValidScaleStartingOctave(int octave)
+		{
+			return octave >= MINIMUM_SCALE_STARTING_OCTAVE && octave <= MAXIMUM_SCALE_STARTING_OCTAVE;
+		}
+
+		private static bool NoteContainsOctave(string note)
+		{
+			return note.Any(ch => char.IsDigit(ch));
+		}
+
+		private static IEnumerable<string> ApplyStartingOctave(IEnumerable<string> notes, int startingOctave)
+		{
+			var noteArray = notes.ToArray();
+			var firstOctave = GetNoteOctave(noteArray.First());
+			return noteArray.Select(note => $"{GetNoteName(note)}{startingOctave + GetNoteOctave(note) - firstOctave}");
+		}
+
+		private static string GetNoteName(string note)
+		{
+			return new string(note.Where(ch => !char.IsDigit(ch)).ToArray());
+		}
+
+		private static int GetNoteOctave(string note)
+		{
+			var octaveString = new string(note.Where(ch => char.IsDigit(ch)).ToArray());
+			return int.Parse(octaveString);
 		}
 	}
 }
