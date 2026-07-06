@@ -1,11 +1,12 @@
 namespace NoteScaler.Services
 {
-	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
 	using NoteScaler.Services.Interfaces;
 	using System;
+	using System.Diagnostics.CodeAnalysis;
 	using System.Linq;
 
+	[ExcludeFromCodeCoverage]
 	public sealed class MusicNotePlayer : IMusicNotePlayer
 	{
 		private readonly IMusicNoteFactory musicNoteFactory;
