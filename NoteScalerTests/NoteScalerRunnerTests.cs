@@ -12,6 +12,7 @@ namespace NoteScalerTests
 		[InlineData(new[] { "--note", "C", "--octave", "5" }, "C5-500ms is the current note", "Playing Major Scale: C5,D5,E5,F5,G5,A5,B5,C6")]
 		[InlineData(new[] { "--note", "C", "--octave", "10" }, "C10-500ms is the current note", "Playing Major Scale: C10,D10,E10,F10,G10,A10,B10,C11")]
 		[InlineData(new[] { "--note", "C" }, "C3-500ms is the current note", "Playing Major Scale: C3,D3,E3,F3,G3,A3,B3,C4")]
+		[InlineData(new[] { "--note", "C5" }, "C5-500ms is the current note", "Playing Major Scale: C5,D5,E5,F5,G5,A5,B5,C6")]
 		public void Run_WhenNoteOptionIsUsed_StartsAtSpecifiedOrDefaultOctave(string[] args, string expectedCurrentNoteMessage, string expectedMajorScaleMessage)
 		{
 			var consoleOutputService = new CapturingConsoleOutputService();
@@ -30,6 +31,7 @@ namespace NoteScalerTests
 		[Theory]
 		[InlineData(new[] { "--note", "C", "--octave=-1" }, "-1")]
 		[InlineData(new[] { "--note", "C", "--octave", "11" }, "11")]
+		[InlineData(new[] { "--note", "C11" }, "11")]
 		public void Run_WhenNoteOptionIsUsedWithOutOfRangeOctave_WritesValidationMessage(string[] args, string expectedOctave)
 		{
 			var consoleOutputService = new CapturingConsoleOutputService();
