@@ -53,6 +53,41 @@ namespace NoteScalerTests
 			Assert.DoesNotContain("D#1", actual);
 		}
 
+		[Theory]
+		[InlineData("B")]
+		[InlineData("E")]
+		public void BuildMajorScale_CoversExistingWholeStepConditionForBAndE(string note)
+		{
+			var builder = new MusicNoteScaleBuilder();
+
+			var actual = builder.BuildMajorScale(note, ToneTypes.Natural).ToArray();
+
+			Assert.Equal(8, actual.Length);
+			Assert.StartsWith(note, actual.First());
+		}
+
+		[Fact]
+		public void BuildRelativeMinorScale_RemovesOctaveFromRelativeMinorNote()
+		{
+			var builder = new MusicNoteScaleBuilder();
+			var majorScale = new[] { "C0", "D0", "E0", "F0", "G0", "A0", "B0", "C1" };
+
+			var actual = builder.BuildRelativeMinorScale(majorScale, ToneTypes.Natural).ToArray();
+
+			Assert.Equal(new[] { "A0", "B0", "C1", "D1", "E1", "F1", "G1", "A1" }, actual);
+		}
+
+		[Fact]
+		public void BuildRelativeMinorScale_WhenRelativeMinorHasNoOctave_UsesNoteAsProvided()
+		{
+			var builder = new MusicNoteScaleBuilder();
+			var majorScale = new[] { "C", "D", "E", "F", "G", "A", "B", "C" };
+
+			var actual = builder.BuildRelativeMinorScale(majorScale, ToneTypes.Natural).ToArray();
+
+			Assert.Equal(new[] { "A0", "B0", "C1", "D1", "E1", "F1", "G1", "A1" }, actual);
+		}
+
 		[Fact]
 		public void GetNoteContext_WhenNoteIsUnsupported_ThrowsArgumentException()
 		{
