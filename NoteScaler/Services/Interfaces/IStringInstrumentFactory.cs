@@ -7,6 +7,7 @@
 	public interface IStringInstrumentFactory
 	{
 		IStringInstrument Create(TuningScheme tuningScheme, int numberOfFrets);
+		IStringInstrument Create(string definitionName);
 		IStringInstrument Create(StringInstrumentDefinition definition);
 	}
 }
