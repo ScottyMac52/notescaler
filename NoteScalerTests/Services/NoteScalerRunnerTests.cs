@@ -1,5 +1,6 @@
 namespace NoteScalerTests.Services
 {
+	using Newtonsoft.Json;
 	using NoteScaler.Config;
 	using NoteScaler.Enums;
 	using NoteScaler.Models;
@@ -9,6 +10,7 @@ namespace NoteScalerTests.Services
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
+	using System.Linq;
 	using Xunit;
 
 	public class NoteScalerRunnerTests : IDisposable
@@ -222,8 +224,24 @@ namespace NoteScalerTests.Services
 		{
 			Directory.CreateDirectory("Instruments");
 			var path = Path.Combine("Instruments", "string-instruments.json");
-			var openStrings = string.Join(",", notes.Select((note, index) => $"{{ \""number\"": {index + 1}, \""note\"": \""{note}\"" }}"));
-			File.WriteAllText(path, $"{{ \""instruments\"": [{{ \""name\"": \""{name}\"", \""strings\"": {strings}, \""frets\"": 20, \""openStrings\"": [{openStrings}] }}] }}");
+			var document = new StringInstrumentDefinitionDocument
+			{
+				Instruments = new[]
+				{
+					new StringInstrumentDefinition
+					{
+						Name = name,
+						NumberOfStrings = strings,
+						Frets = 20,
+						OpenStrings = notes.Select((note, index) => new StringInstrumentStringDefinition
+						{
+							Number = index + 1,
+							Note = note
+						}).ToArray()
+					}
+				}
+			};
+			File.WriteAllText(path, JsonConvert.SerializeObject(document));
 		}
 
 		private sealed class Harness
