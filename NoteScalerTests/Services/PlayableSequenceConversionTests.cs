@@ -3,7 +3,6 @@ namespace NoteScalerTests.Services
 	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using NoteScaler.Services;
-	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using Xunit;
@@ -46,7 +45,7 @@ namespace NoteScalerTests.Services
 			{
 				Name = "Tab",
 				TabString = tabString,
-				Tuning = TuningScheme.Standard
+				Tuning = "Standard"
 			};
 
 			playableSequence.ConvertTabsToNoteSequence(new Guitar(), tabs);
