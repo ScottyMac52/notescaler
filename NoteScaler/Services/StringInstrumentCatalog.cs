@@ -79,12 +79,7 @@ namespace NoteScaler.Services
 			}
 
 			var result = loader.Load(path);
-			if (!result.Success)
-			{
-				throw new InvalidOperationException(result.Error);
-			}
-
-			return result.Instruments;
+			return result.Success ? result.Instruments : Array.Empty<StringInstrumentDefinition>();
 		}
 
 		private static string GetUserDefinitionsPath()
