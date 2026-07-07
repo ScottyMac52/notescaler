@@ -16,7 +16,11 @@ namespace NoteScaler.Services
 
 		public static TuningDefinition GetDefinition(TuningScheme tuningScheme)
 		{
-			var definition = StringInstrumentCatalog.LoadBaseCatalog().GetDefinition(tuningScheme.ToString());
+			if (!StringInstrumentCatalog.LoadBaseCatalog().TryGetDefinition(tuningScheme.ToString(), out var definition))
+			{
+				throw new ArgumentException($"Unsupported tuning scheme: {tuningScheme}", nameof(tuningScheme));
+			}
+
 			return new TuningDefinition(tuningScheme, definition.GetOpenStringNotesByStringNumber());
 		}
 	}
