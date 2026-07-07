@@ -1,0 +1,262 @@
+{
+  "instruments": [
+    {
+      "name": "Standard",
+      "aliases": ["Six String Standard"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "B3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "E2" }
+      ]
+    },
+    {
+      "name": "Eb Standard",
+      "aliases": ["EbStandard"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D#4" },
+        { "number": 2, "note": "A#3" },
+        { "number": 3, "note": "F#3" },
+        { "number": 4, "note": "C#3" },
+        { "number": 5, "note": "G#2" },
+        { "number": 6, "note": "D#2" }
+      ]
+    },
+    {
+      "name": "Drop D",
+      "aliases": ["DropD"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "B3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "D2" }
+      ]
+    },
+    {
+      "name": "Drop C#",
+      "aliases": ["DropCSharp"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D#4" },
+        { "number": 2, "note": "A#3" },
+        { "number": 3, "note": "F#3" },
+        { "number": 4, "note": "C#3" },
+        { "number": 5, "note": "G#2" },
+        { "number": 6, "note": "C#2" }
+      ]
+    },
+    {
+      "name": "Drop C",
+      "aliases": ["DropC"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "A3" },
+        { "number": 3, "note": "F3" },
+        { "number": 4, "note": "C3" },
+        { "number": 5, "note": "G2" },
+        { "number": 6, "note": "C2" }
+      ]
+    },
+    {
+      "name": "Drop B",
+      "aliases": ["DropB"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "C#4" },
+        { "number": 2, "note": "G#3" },
+        { "number": 3, "note": "E3" },
+        { "number": 4, "note": "B2" },
+        { "number": 5, "note": "F#2" },
+        { "number": 6, "note": "B1" }
+      ]
+    },
+    {
+      "name": "Drop A",
+      "aliases": ["DropA"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "B3" },
+        { "number": 2, "note": "F#3" },
+        { "number": 3, "note": "D3" },
+        { "number": 4, "note": "A2" },
+        { "number": 5, "note": "E2" },
+        { "number": 6, "note": "A1" }
+      ]
+    },
+    {
+      "name": "DADGAD",
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "A3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "D2" }
+      ]
+    },
+    {
+      "name": "Open A",
+      "aliases": ["OpenA"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "C#4" },
+        { "number": 3, "note": "A3" },
+        { "number": 4, "note": "E3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "E2" }
+      ]
+    },
+    {
+      "name": "Open G",
+      "aliases": ["OpenG"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "B3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "G2" },
+        { "number": 6, "note": "D2" }
+      ]
+    },
+    {
+      "name": "Open C",
+      "aliases": ["OpenC"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "C3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "C3" },
+        { "number": 5, "note": "G2" },
+        { "number": 6, "note": "C2" }
+      ]
+    },
+    {
+      "name": "Open D",
+      "aliases": ["OpenD"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "A3" },
+        { "number": 3, "note": "F#3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "D2" }
+      ]
+    },
+    {
+      "name": "D Standard",
+      "aliases": ["DStandard"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "D4" },
+        { "number": 2, "note": "A3" },
+        { "number": 3, "note": "F3" },
+        { "number": 4, "note": "C3" },
+        { "number": 5, "note": "G2" },
+        { "number": 6, "note": "D2" }
+      ]
+    },
+    {
+      "name": "C# Standard",
+      "aliases": ["CSharpStandard"],
+      "strings": 6,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "C#4" },
+        { "number": 2, "note": "G#3" },
+        { "number": 3, "note": "E3" },
+        { "number": 4, "note": "B2" },
+        { "number": 5, "note": "F#2" },
+        { "number": 6, "note": "C#2" }
+      ]
+    },
+    {
+      "name": "Ukulele",
+      "strings": 4,
+      "frets": 20,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "A4" },
+        { "number": 2, "note": "E4" },
+        { "number": 3, "note": "C4" },
+        { "number": 4, "note": "G4" }
+      ]
+    },
+    {
+      "name": "12 String Standard",
+      "aliases": ["TwelveStringStandard"],
+      "strings": 12,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "E4" },
+        { "number": 3, "note": "B3" },
+        { "number": 4, "note": "B3" },
+        { "number": 5, "note": "G4" },
+        { "number": 6, "note": "G3" },
+        { "number": 7, "note": "D4" },
+        { "number": 8, "note": "D3" },
+        { "number": 9, "note": "A3" },
+        { "number": 10, "note": "A2" },
+        { "number": 11, "note": "E3" },
+        { "number": 12, "note": "E2" }
+      ]
+    },
+    {
+      "name": "7 String Drop A",
+      "aliases": ["SevenStringDropA"],
+      "strings": 7,
+      "frets": 24,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "B3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" },
+        { "number": 5, "note": "A2" },
+        { "number": 6, "note": "E2" },
+        { "number": 7, "note": "A1" }
+      ]
+    }
+  ]
+}
