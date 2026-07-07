@@ -1,8 +1,6 @@
 ﻿namespace NoteScaler.Models
 {
 	using Newtonsoft.Json;
-	using Newtonsoft.Json.Converters;
-	using NoteScaler.Enums;
 
 	public class TabVersion
 	{
@@ -13,8 +11,7 @@
 		public int Speed { get; set; }
 
 		[JsonProperty("tuning", Required = Required.Always)]
-		[JsonConverter(typeof(StringEnumConverter))]
-		public TuningScheme Tuning { get; set; }
+		public string Tuning { get; set; }
 
 		[JsonProperty("tab", Required = Required.Always)]
 		public string TabString { get; set; }

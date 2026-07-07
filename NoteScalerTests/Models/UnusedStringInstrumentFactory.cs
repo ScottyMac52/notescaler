@@ -13,6 +13,11 @@ namespace NoteScalerTests.Models
 			throw new InvalidOperationException($"The string instrument factory should not be used by {nameof(UnusedStringInstrumentFactory)}.");
 		}
 
+		public IStringInstrument Create(string definitionName)
+		{
+			throw new InvalidOperationException($"The string instrument factory should not be used by {nameof(UnusedStringInstrumentFactory)}.");
+		}
+
 		public IStringInstrument Create(StringInstrumentDefinition definition)
 		{
 			throw new InvalidOperationException($"The string instrument factory should not be used by {nameof(UnusedStringInstrumentFactory)}.");

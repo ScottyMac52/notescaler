@@ -18,11 +18,16 @@ namespace NoteScalerTests.Services
 			new object[] { TuningScheme.OpenC, new[] { "E4", "C3", "G3", "C3", "G2", "C2" } },
 			new object[] { TuningScheme.OpenD, new[] { "D4", "A3", "F#3", "D3", "A2", "D2" } },
 			new object[] { TuningScheme.DropB, new[] { "C#4", "G#3", "E3", "B2", "F#2", "B1" } },
+			new object[] { TuningScheme.DropA, new[] { "B3", "F#3", "D3", "A2", "E2", "A1" } },
 			new object[] { TuningScheme.DStandard, new[] { "D4", "A3", "F3", "C3", "G2", "D2" } },
 			new object[] { TuningScheme.EbStandard, new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "D#2" } },
 			new object[] { TuningScheme.CSharpStandard, new[] { "C#4", "G#3", "E3", "B2", "F#2", "C#2" } },
 			new object[] { TuningScheme.DADGAD, new[] { "D4", "A3", "G3", "D3", "A2", "D2" } },
-			new object[] { TuningScheme.OpenG, new[] { "D4", "B3", "G3", "D3", "G2", "D2" } }
+			new object[] { TuningScheme.OpenA, new[] { "E4", "C#4", "A3", "E3", "A2", "E2" } },
+			new object[] { TuningScheme.OpenG, new[] { "D4", "B3", "G3", "D3", "G2", "D2" } },
+			new object[] { TuningScheme.Ukulele, new[] { "A4", "E4", "C4", "G4" } },
+			new object[] { TuningScheme.TwelveStringStandard, new[] { "E4", "E4", "B3", "B3", "G4", "G3", "D4", "D3", "A3", "A2", "E3", "E2" } },
+			new object[] { TuningScheme.SevenStringDropA, new[] { "E4", "B3", "G3", "D3", "A2", "E2", "A1" } }
 		};
 
 		[Theory]

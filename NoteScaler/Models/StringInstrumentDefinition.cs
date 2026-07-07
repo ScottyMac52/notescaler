@@ -9,6 +9,9 @@ namespace NoteScaler.Models
 		[JsonProperty("name", Required = Required.Always)]
 		public string Name { get; set; }
 
+		[JsonProperty("aliases")]
+		public IEnumerable<string> Aliases { get; set; }
+
 		[JsonProperty("strings", Required = Required.Always)]
 		public int NumberOfStrings { get; set; }
 
@@ -22,6 +25,10 @@ namespace NoteScaler.Models
 		public IEnumerable<StringInstrumentStringDefinition> OpenStrings { get; set; }
 
 		public int EffectiveCapo => Capo.GetValueOrDefault();
+
+		public IEnumerable<string> LookupNames => new[] { Name }
+			.Concat(Aliases ?? Enumerable.Empty<string>())
+			.Where(lookupName => !string.IsNullOrWhiteSpace(lookupName));
 
 		public IEnumerable<string> GetOpenStringNotesByStringNumber()
 		{

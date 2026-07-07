@@ -33,11 +33,5 @@
 
 		[Option('t', "tab", Default = null, HelpText = "Name of the tab file to play from the Tabs directory.")]
 		public string Tab { get; set; }
-
-		[Option("string-instruments", Default = null, HelpText = "Path to a JSON file that defines custom string instruments for tab playback.")]
-		public string StringInstruments { get; set; }
-
-		[Option("string-instrument", Default = null, HelpText = "Name of the custom string instrument to use from --string-instruments.")]
-		public string StringInstrument { get; set; }
 	}
 }

@@ -20,29 +20,17 @@ namespace NoteScaler.Services
 		private readonly IPlayableSequenceFactory playableSequenceFactory;
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
 		private readonly IConsoleOutputService consoleOutputService;
-		private readonly IStringInstrumentDefinitionLoader stringInstrumentDefinitionLoader;
 
 		public NoteScalerRunner(
 			ICommandLineOptionsService commandLineOptionsService,
 			IPlayableSequenceFactory playableSequenceFactory,
 			IStringInstrumentFactory stringInstrumentFactory,
 			IConsoleOutputService consoleOutputService)
-			: this(commandLineOptionsService, playableSequenceFactory, stringInstrumentFactory, consoleOutputService, new StringInstrumentDefinitionLoader())
-		{
-		}
-
-		public NoteScalerRunner(
-			ICommandLineOptionsService commandLineOptionsService,
-			IPlayableSequenceFactory playableSequenceFactory,
-			IStringInstrumentFactory stringInstrumentFactory,
-			IConsoleOutputService consoleOutputService,
-			IStringInstrumentDefinitionLoader stringInstrumentDefinitionLoader)
 		{
 			this.commandLineOptionsService = commandLineOptionsService;
 			this.playableSequenceFactory = playableSequenceFactory;
 			this.stringInstrumentFactory = stringInstrumentFactory;
 			this.consoleOutputService = consoleOutputService;
-			this.stringInstrumentDefinitionLoader = stringInstrumentDefinitionLoader;
 		}
 
 		public int Run(string[] args)
@@ -65,7 +53,7 @@ namespace NoteScaler.Services
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
 				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
-				PlayTabAsRequired(options, tabName, playableSequence);
+				PlayTabAsRequired(tabName, playableSequence);
 				PlaySongAsRequired(key, fileName, playableSequence);
 			}
 			finally
@@ -194,7 +182,7 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlayTabAsRequired(NoteScalerOptions options, string tabName, PlayableSequence playableSequence)
+		private void PlayTabAsRequired(string tabName, PlayableSequence playableSequence)
 		{
 			if (!string.IsNullOrEmpty(tabName))
 			{
@@ -206,7 +194,7 @@ namespace NoteScaler.Services
 				else
 				{
 					tabs.FixUp();
-					var stringInstrument = CreateStringInstrumentForTab(options, tabs);
+					var stringInstrument = CreateStringInstrumentForTab(tabs);
 					if (stringInstrument == null)
 					{
 						return;
@@ -220,50 +208,19 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private IStringInstrument CreateStringInstrumentForTab(NoteScalerOptions options, Tablature tabs)
+		private IStringInstrument CreateStringInstrumentForTab(Tablature tabs)
 		{
-			if (string.IsNullOrWhiteSpace(options.StringInstruments))
+			try
 			{
-				return stringInstrumentFactory.Create(tabs.Tuning, 21);
+				var stringInstrument = stringInstrumentFactory.Create(tabs.Tuning);
+				consoleOutputService.WriteMessage($"Using string instrument: {stringInstrument.Name}");
+				return stringInstrument;
 			}
-
-			var loadResult = stringInstrumentDefinitionLoader.Load(options.StringInstruments);
-			if (!loadResult.Success)
+			catch (Exception ex)
 			{
-				consoleOutputService.WriteMessage(loadResult.Error, ConsoleColor.Red);
+				consoleOutputService.WriteMessage(ex.Message, ConsoleColor.Red);
 				return null;
 			}
-
-			var definition = SelectStringInstrumentDefinition(loadResult.Instruments, options.StringInstrument);
-			if (definition == null)
-			{
-				return null;
-			}
-
-			consoleOutputService.WriteMessage($"Using string instrument: {definition.Name}");
-			return stringInstrumentFactory.Create(definition);
-		}
-
-		private StringInstrumentDefinition SelectStringInstrumentDefinition(IReadOnlyCollection<StringInstrumentDefinition> definitions, string requestedName)
-		{
-			if (!string.IsNullOrWhiteSpace(requestedName))
-			{
-				var requestedDefinition = definitions.SingleOrDefault(definition => definition.Name.Equals(requestedName, StringComparison.InvariantCultureIgnoreCase));
-				if (requestedDefinition == null)
-				{
-					consoleOutputService.WriteMessage($"String instrument not found: {requestedName}", ConsoleColor.Red);
-				}
-
-				return requestedDefinition;
-			}
-
-			if (definitions.Count == 1)
-			{
-				return definitions.Single();
-			}
-
-			consoleOutputService.WriteMessage("Multiple string instruments are available. Use --string-instrument to choose one.", ConsoleColor.Red);
-			return null;
 		}
 
 		private SongKey GetTheSongByKeyAsRequired(string key, Song song)

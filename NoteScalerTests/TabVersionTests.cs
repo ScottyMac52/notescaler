@@ -2,7 +2,6 @@
 namespace NoteScalerTests
 {
 	using Newtonsoft.Json;
-	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using Xunit;
 
@@ -11,7 +10,7 @@ namespace NoteScalerTests
 		private readonly string expectedName;
 		private readonly int expectedSpeed;
 		private readonly string expectedTabString;
-		private readonly TuningScheme expectedTuning;
+		private readonly string expectedTuning;
 		private TabVersion actual;
 		private readonly string jsonFormatString;
 
@@ -21,7 +20,7 @@ namespace NoteScalerTests
 			expectedName = "TabSong";
 			expectedSpeed = 1000;
 			expectedTabString = "1-3, 1-5, 1-7";
-			expectedTuning = TuningScheme.Standard;
+			expectedTuning = "Standard";
 		}
 
 		[Fact]
@@ -42,16 +41,18 @@ namespace NoteScalerTests
 		}
 
 		[Fact]
-		public void TabVersionTest_EnsureExceptionOnInvalidTuning()
+		public void TabVersionTest_AllowsCustomTuningNames()
 		{
 			// ARRANGE
-			var invalidTuning = "invalid";
-			var jsonString = string.Format(jsonFormatString, expectedName, expectedSpeed, expectedTabString, invalidTuning);
+			var customTuning = "My Weird Tuning";
+			var jsonString = string.Format(jsonFormatString, expectedName, expectedSpeed, expectedTabString, customTuning);
 			jsonString = FixupJsonString(jsonString);
 
 			// ACT 
+			actual = JsonConvert.DeserializeObject<TabVersion>(jsonString);
+
 			// ASSERT
-			Assert.Throws<JsonSerializationException>(() => JsonConvert.DeserializeObject<TabVersion>(jsonString));
+			Assert.Equal(customTuning, actual.Tuning);
 		}
 	}
 }
