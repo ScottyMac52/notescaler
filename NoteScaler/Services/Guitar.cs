@@ -9,22 +9,6 @@
 
 	public class Guitar : IStringInstrument
 	{
-		private static readonly IReadOnlyDictionary<TuningScheme, string[]> TuningDefinitions = new Dictionary<TuningScheme, string[]>
-		{
-			[TuningScheme.Standard] = new[] { "E4", "B3", "G3", "D3", "A2", "E2" },
-			[TuningScheme.DropC] = new[] { "D4", "A3", "F3", "C3", "G2", "C2" },
-			[TuningScheme.DropCSharp] = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "C#2" },
-			[TuningScheme.DropD] = new[] { "D4", "B3", "G3", "D3", "A2", "D2" },
-			[TuningScheme.OpenC] = new[] { "E4", "C3", "G3", "C3", "G2", "C2" },
-			[TuningScheme.OpenD] = new[] { "D4", "A3", "F#3", "D3", "A2", "D2" },
-			[TuningScheme.DropB] = new[] { "C#4", "G#3", "E3", "B2", "F#2", "B1" },
-			[TuningScheme.DStandard] = new[] { "D4", "A3", "F3", "C3", "G2", "D2" },
-			[TuningScheme.EbStandard] = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "D#2" },
-			[TuningScheme.CSharpStandard] = new[] { "C#4", "G#3", "E3", "B2", "F#2", "C#2" },
-			[TuningScheme.DADGAD] = new[] { "D4", "A3", "G3", "D3", "A2", "D2" },
-			[TuningScheme.OpenG] = new[] { "D4", "B3", "G3", "D3", "G2", "D2" }
-		};
-
 		/// <summary>
 		/// Copnstructs a Guitar!
 		/// </summary>
@@ -134,7 +118,8 @@
 
 		private void InitializeStrings()
 		{
-			Strings = TuningDefinitions[TuningScheme]
+			var tuningDefinition = GuitarTuningCatalog.GetDefinition(TuningScheme);
+			Strings = tuningDefinition.OpenStringNotes
 				.Select((note, index) => new GuitarString(index + 1, note, Frets))
 				.ToList();
 		}
