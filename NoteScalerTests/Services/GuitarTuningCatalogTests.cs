@@ -53,7 +53,7 @@ namespace NoteScalerTests.Services
 			var supportedTunings = GuitarTuningCatalog.SupportedTunings.ToArray();
 
 			Assert.All(supportedTunings, definition => Assert.NotEmpty(definition.OpenStringNotes));
-			Assert.All(supportedTunings, definition => Assert.All(definition.OpenStringNotes, Assert.False));
+			Assert.All(supportedTunings, definition => Assert.All(definition.OpenStringNotes, note => Assert.False(string.IsNullOrWhiteSpace(note))));
 		}
 
 		[Fact]
