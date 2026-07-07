@@ -52,10 +52,10 @@ Play a tab file named `anotherbrickinthewallpart2.json` from the `Tabs` director
  dotnet run --project NoteScaler -- --tab anotherbrickinthewallpart2
 ```
 
-Play a tab using a custom string instrument definition file:
+Play a tab whose JSON file references an instrument by name:
 
 ```bash
- dotnet run --project NoteScaler -- --tab my-seven-string-tab --string-instruments NoteScaler/Instruments/custom-instruments.sample.json --string-instrument "Seven String Drop A"
+ dotnet run --project NoteScaler -- --tab my-seven-string-tab
 ```
 
 Pause before playback, then play using a different instrument voice:
@@ -64,26 +64,47 @@ Pause before playback, then play using a different instrument voice:
  dotnet run --project NoteScaler -- --note C --prewait 2 --speed 300 --instrument Flute
 ```
 
-## Custom string instrument JSON
+## String instrument JSON
 
-Custom string instruments are supplied with `--string-instruments <path>`. If the file contains more than one instrument, select one with `--string-instrument <name>`.
+String instruments are loaded automatically. No command-line option is required.
+
+NoteScaler always loads immutable base instruments from an embedded JSON resource. It also loads editable supplemental instruments from:
+
+```text
+Instruments/string-instruments.json
+```
+
+The embedded base instrument file is read-only to users because it is compiled into the application. The supplemental file is copied beside the application output and can be edited to add more instruments.
+
+A tab chooses a string instrument through its `tuning` value:
+
+```json
+{
+  "name": "Seven String Example",
+  "speed": 1000,
+  "strings": 7,
+  "tab": "7-0,1-0",
+  "tuning": "7 String Drop A",
+  "repeat": 1
+}
+```
+
+Supplemental instruments use this JSON shape:
 
 ```json
 {
   "instruments": [
     {
-      "name": "Seven String Drop A",
-      "strings": 7,
-      "frets": 24,
+      "name": "Mandolin",
+      "aliases": ["My Mandolin"],
+      "strings": 4,
+      "frets": 20,
       "capo": 0,
       "openStrings": [
-        { "number": 1, "note": "E4" },
-        { "number": 2, "note": "B3" },
-        { "number": 3, "note": "G3" },
-        { "number": 4, "note": "D3" },
-        { "number": 5, "note": "A2" },
-        { "number": 6, "note": "E2" },
-        { "number": 7, "note": "A1" }
+        { "number": 1, "note": "E5" },
+        { "number": 2, "note": "A4" },
+        { "number": 3, "note": "D4" },
+        { "number": 4, "note": "G3" }
       ]
     }
   ]
@@ -91,6 +112,8 @@ Custom string instruments are supplied with `--string-instruments <path>`. If th
 ```
 
 `capo` is optional and defaults to `0`. When supplied, NoteScaler treats the configured open string note as the physical open tuning and shifts the sounding open note upward by the capo fret count.
+
+Base instrument names are immutable. If the supplemental file defines a name or alias that already exists in the embedded base catalog, the embedded base definition wins.
 
 ## Command-line options
 
@@ -105,8 +128,6 @@ Custom string instruments are supplied with `--string-instruments <path>`. If th
 | `-n` | `--note` | `null` | Displays details for a note and plays its major, minor, and relative minor scales. |
 | `-f` | `--file` | `null` | Plays a JSON song file from the `Songs` directory. Pass the file name without `.json`. |
 | `-t` | `--tab` | `null` | Plays a JSON tab file from the `Tabs` directory. Pass the file name without `.json`. |
-|  | `--string-instruments` | `null` | Path to a JSON file that defines custom string instruments for tab playback. |
-|  | `--string-instrument` | `null` | Name of the custom string instrument to use from `--string-instruments`. Required when the file defines more than one instrument. |
 
 ## Operation order
 
@@ -116,7 +137,7 @@ When multiple operation options are supplied, NoteScaler processes them in this 
 2. Apply `--prewait` if configured.
 3. Create the playable sequence.
 4. Process `--note` if supplied.
-5. Process `--tab` if supplied. If `--string-instruments` is supplied, the selected custom string instrument is used for tab fret resolution.
+5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog.
 6. Process `--file` if supplied.
 
 That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, or `--file`.
@@ -146,19 +167,20 @@ flowchart TD
     N -->|Yes| O[Load tab file from Tabs]
     O --> P{Tab loaded?}
     P -->|Yes| Q[Apply tab defaults and tuning]
-    Q --> R[Convert tab frets to notes]
-    R --> S[Prepare and play tab sequence]
-    P -->|No| T[Write tab load error]
-    N -->|No| U{--file supplied?}
-    S --> U
-    T --> U
+    Q --> R[Resolve string instrument from JSON catalogs]
+    R --> S[Convert tab frets to notes]
+    S --> T[Prepare and play tab sequence]
+    P -->|No| U[Write tab load error]
+    N -->|No| V{--file supplied?}
+    T --> V
+    U --> V
 
-    U -->|Yes| V[Load song file from Songs]
-    V --> W{Song loaded?}
-    W -->|Yes| X[Select requested/default key]
-    X --> Y[Prepare and play song sequence]
-    W -->|No| AA[Write song load error]
-    U -->|No| Z[Exit]
-    Y --> Z
+    V -->|Yes| W[Load song file from Songs]
+    W --> X{Song loaded?}
+    X -->|Yes| Y[Select requested/default key]
+    Y --> AA[Prepare and play song sequence]
+    X -->|No| AB[Write song load error]
+    V -->|No| Z[Exit]
     AA --> Z
+    AB --> Z
 ```
