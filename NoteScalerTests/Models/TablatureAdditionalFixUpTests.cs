@@ -1,6 +1,5 @@
 namespace NoteScalerTests.Models
 {
-	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using Xunit;
 
@@ -17,11 +16,11 @@ namespace NoteScalerTests.Models
 				Name = "Current",
 				Speed = 600,
 				TabString = "1-0",
-				Tuning = TuningScheme.Standard,
+				Tuning = "Standard",
 				Default = defaultVersion,
 				TabVersions = new[]
 				{
-					new TabVersion { Name = "Lead", Speed = 600, TabString = "1-3", Tuning = TuningScheme.DropD }
+					new TabVersion { Name = "Lead", Speed = 600, TabString = "1-3", Tuning = "DropD" }
 				}
 			};
 
@@ -29,7 +28,7 @@ namespace NoteScalerTests.Models
 
 			Assert.Equal("Current", tablature.Name);
 			Assert.Equal("1-0", tablature.TabString);
-			Assert.Equal(TuningScheme.Standard, tablature.Tuning);
+			Assert.Equal("Standard", tablature.Tuning);
 		}
 	}
 }
