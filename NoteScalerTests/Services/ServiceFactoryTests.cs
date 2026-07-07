@@ -2,6 +2,7 @@ namespace NoteScalerTests.Services
 {
 	using NoteScaler.Config;
 	using NoteScaler.Enums;
+	using NoteScaler.Models;
 	using NoteScaler.Services;
 	using System.Linq;
 	using Xunit;
@@ -48,6 +49,36 @@ namespace NoteScalerTests.Services
 			Assert.Equal(TuningScheme.DropD, guitar.TuningScheme);
 			Assert.Equal(21, guitar.Frets);
 			Assert.Equal(6, guitar.Strings.Count());
+		}
+
+		[Fact]
+		public void StringInstrumentFactory_CreatesGuitarFromCustomDefinition()
+		{
+			var factory = new StringInstrumentFactory();
+			var definition = new StringInstrumentDefinition
+			{
+				Name = "Four String Bass",
+				NumberOfStrings = 4,
+				Frets = 20,
+				Capo = 1,
+				OpenStrings = new[]
+				{
+					new StringInstrumentStringDefinition { Number = 1, Note = "G2" },
+					new StringInstrumentStringDefinition { Number = 2, Note = "D2" },
+					new StringInstrumentStringDefinition { Number = 3, Note = "A1" },
+					new StringInstrumentStringDefinition { Number = 4, Note = "E1" }
+				}
+			};
+
+			var instrument = factory.Create(definition);
+
+			var guitar = Assert.IsType<Guitar>(instrument);
+			Assert.Equal("Four String Bass", guitar.Name);
+			Assert.Equal(20, guitar.Frets);
+			Assert.Equal(1, guitar.Capo);
+			Assert.Equal(4, guitar.Strings.Count());
+			Assert.Equal("G#2", guitar.GetNote(1, 0));
+			Assert.Equal("F1", guitar.GetNote(4, 0));
 		}
 	}
 }
