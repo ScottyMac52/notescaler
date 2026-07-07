@@ -25,6 +25,7 @@
 			services.AddSingleton<IStringInstrumentDefinitionLoader, StringInstrumentDefinitionLoader>();
 			services.AddSingleton<IStringInstrumentCatalog>(_ => StringInstrumentCatalog.LoadDefaultCatalog());
 			services.AddSingleton<IStringInstrumentFactory, StringInstrumentFactory>();
+			services.AddSingleton<IGuitarPerformanceEventFactory, GuitarPerformanceEventFactory>();
 			services.AddSingleton<IMusicNoteCache, MusicNoteCache>();
 			services.AddSingleton<MusicNoteScaleBuilder>();
 			services.AddSingleton<MusicNoteFrequencyCalculator>();
