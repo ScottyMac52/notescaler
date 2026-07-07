@@ -6,6 +6,7 @@ namespace NoteScaler.Services
 	using System;
 	using System.IO;
 	using System.Linq;
+	using System.Reflection;
 
 	public sealed class StringInstrumentDefinitionLoader : IStringInstrumentDefinitionLoader
 	{
@@ -21,9 +22,31 @@ namespace NoteScaler.Services
 				return StringInstrumentDefinitionLoadResult.NotLoaded($"String instrument definition file not found: {path}");
 			}
 
+			return LoadJson(path, File.ReadAllText(path));
+		}
+
+		public StringInstrumentDefinitionLoadResult LoadResource(Assembly assembly, string resourceName)
+		{
+			if (assembly == null)
+			{
+				throw new ArgumentNullException(nameof(assembly));
+			}
+
+			using var resourceStream = assembly.GetManifestResourceStream(resourceName);
+			if (resourceStream == null)
+			{
+				return StringInstrumentDefinitionLoadResult.NotLoaded($"String instrument definition resource not found: {resourceName}");
+			}
+
+			using var reader = new StreamReader(resourceStream);
+			return LoadJson(resourceName, reader.ReadToEnd());
+		}
+
+		public StringInstrumentDefinitionLoadResult LoadJson(string sourceName, string json)
+		{
 			try
 			{
-				var document = JsonConvert.DeserializeObject<StringInstrumentDefinitionDocument>(File.ReadAllText(path));
+				var document = JsonConvert.DeserializeObject<StringInstrumentDefinitionDocument>(json);
 				var validationError = Validate(document);
 				if (!string.IsNullOrEmpty(validationError))
 				{
@@ -34,7 +57,7 @@ namespace NoteScaler.Services
 			}
 			catch (Exception ex)
 			{
-				return StringInstrumentDefinitionLoadResult.NotLoaded($"Unable to load string instrument definitions from {path}: {ex.Message}");
+				return StringInstrumentDefinitionLoadResult.NotLoaded($"Unable to load string instrument definitions from {sourceName}: {ex.Message}");
 			}
 		}
 
@@ -47,12 +70,13 @@ namespace NoteScaler.Services
 			}
 
 			var duplicateName = instruments
-				.Where(instrument => instrument != null && !string.IsNullOrWhiteSpace(instrument.Name))
-				.GroupBy(instrument => instrument.Name, StringComparer.InvariantCultureIgnoreCase)
+				.Where(instrument => instrument != null)
+				.SelectMany(instrument => instrument.LookupNames)
+				.GroupBy(lookupName => lookupName, StringComparer.InvariantCultureIgnoreCase)
 				.FirstOrDefault(group => group.Count() > 1);
 			if (duplicateName != null)
 			{
-				return $"String instrument name must be unique: {duplicateName.Key}.";
+				return $"String instrument name or alias must be unique: {duplicateName.Key}.";
 			}
 
 			foreach (var instrument in instruments)
