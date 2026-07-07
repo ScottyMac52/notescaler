@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Instruments\base-string-instruments.json" />
+    <None Remove="Instruments\string-instruments.json" />
     <None Remove="Songs\amazinggrace.json" />
     <None Remove="Songs\AMinorScale.json" />
     <None Remove="Songs\CMajorScale.json" />
@@ -16,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Instruments\base-string-instruments.json" />
+    <Content Include="Instruments\string-instruments.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Songs\AMinorScale.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
