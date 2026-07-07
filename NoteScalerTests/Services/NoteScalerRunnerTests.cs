@@ -2,7 +2,6 @@ namespace NoteScalerTests.Services
 {
 	using NoteScaler.Config;
 	using NoteScaler.Enums;
-	using NoteScaler.Interfaces;
 	using NoteScaler.Models;
 	using NoteScaler.Services;
 	using NoteScaler.Services.Interfaces;
@@ -118,39 +117,52 @@ namespace NoteScalerTests.Services
 		[Fact]
 		public void Run_LoadsAndPlaysTabFileWithDefaultVersion()
 		{
-			CreateTabFile("runner-tab");
+			CreateTabFile("runner-tab", "Standard");
 			var harness = CreateHarness();
 
 			harness.Runner.Run(new[] { "--tab", "runner-tab" });
 
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Standard"));
 			Assert.NotNull(harness.Factory.CreatedSequence);
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
 		[Fact]
-		public void Run_LoadsAndPlaysTabFileWithCustomStringInstrument()
+		public void Run_LoadsAndPlaysTabFileWithEmbeddedBaseStringInstrument()
 		{
 			CreateSevenStringTabFile("runner-seven-string-tab");
-			var instrumentDefinitionsPath = CreateSevenStringInstrumentDefinitionFile("custom-instruments.json");
 			var harness = CreateHarness();
 
-			harness.Runner.Run(new[] { "--tab", "runner-seven-string-tab", "--string-instruments", instrumentDefinitionsPath, "--string-instrument", "Seven String Drop A" });
+			harness.Runner.Run(new[] { "--tab", "runner-seven-string-tab" });
 
-			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Seven String Drop A"));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: 7 String Drop A"));
 			Assert.NotNull(harness.Factory.CreatedSequence);
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
 		[Fact]
-		public void Run_WhenMultipleCustomStringInstrumentsAreAvailableWithoutSelection_WritesError()
+		public void Run_LoadsAndPlaysTabFileWithExternalStringInstrumentWithoutCommandLineOptions()
 		{
-			CreateTabFile("runner-tab");
-			var instrumentDefinitionsPath = CreateMultipleInstrumentDefinitionFile("multiple-instruments.json");
+			CreateUserInstrumentDefinitionFile("Mandolin", 4, "E5", "A4", "D4", "G3");
+			CreateTabFile("runner-mandolin-tab", "Mandolin");
 			var harness = CreateHarness();
 
-			harness.Runner.Run(new[] { "--tab", "runner-tab", "--string-instruments", instrumentDefinitionsPath });
+			harness.Runner.Run(new[] { "--tab", "runner-mandolin-tab" });
 
-			Assert.Contains(harness.Console.Messages, message => message.Contains("Use --string-instrument to choose one"));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Mandolin"));
+			Assert.NotNull(harness.Factory.CreatedSequence);
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_WhenTabReferencesUnknownStringInstrument_WritesError()
+		{
+			CreateTabFile("runner-missing-instrument-tab", "Not A Real Instrument");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--tab", "runner-missing-instrument-tab" });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Unsupported string instrument: Not A Real Instrument"));
 		}
 
 		public void Dispose()
@@ -194,77 +206,24 @@ namespace NoteScalerTests.Services
 			File.WriteAllText(Path.Combine("Songs", $"{fileName}.json"), "{\"keyName\":\"Main\",\"sequence\":\"C,E\",\"reverse\":false}");
 		}
 
-		private static void CreateTabFile(string fileName)
+		private static void CreateTabFile(string fileName, string tuning)
 		{
 			Directory.CreateDirectory("Tabs");
-			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), "{\"name\":\"Tab\",\"speed\":1000,\"tab\":\"1-0\",\"tuning\":\"Standard\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{\"name\":\"Lead\",\"speed\":0,\"tab\":\"1-0,2-1\",\"tuning\":\"Standard\"}]}");
+			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), $"{{\"name\":\"Tab\",\"speed\":1000,\"tab\":\"1-0\",\"tuning\":\"{tuning}\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{{\"name\":\"Lead\",\"speed\":0,\"tab\":\"1-0,2-1\",\"tuning\":\"{tuning}\"}}]}}");
 		}
 
 		private static void CreateSevenStringTabFile(string fileName)
 		{
 			Directory.CreateDirectory("Tabs");
-			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), "{\"name\":\"Seven String Tab\",\"speed\":1000,\"strings\":7,\"tab\":\"7-0\",\"tuning\":\"Standard\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{\"name\":\"Lead\",\"speed\":0,\"tab\":\"7-0,1-0\",\"tuning\":\"Standard\"}]}");
+			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), "{\"name\":\"Seven String Tab\",\"speed\":1000,\"strings\":7,\"tab\":\"7-0\",\"tuning\":\"7 String Drop A\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{\"name\":\"Lead\",\"speed\":0,\"tab\":\"7-0,1-0\",\"tuning\":\"7 String Drop A\"}]}");
 		}
 
-		private static string CreateSevenStringInstrumentDefinitionFile(string fileName)
+		private static void CreateUserInstrumentDefinitionFile(string name, int strings, params string[] notes)
 		{
-			var path = Path.Combine(Environment.CurrentDirectory, fileName);
-			File.WriteAllText(path, @"{
-				""instruments"": [
-					{
-						""name"": ""Seven String Drop A"",
-						""strings"": 7,
-						""frets"": 24,
-						""openStrings"": [
-							{ ""number"": 1, ""note"": ""E4"" },
-							{ ""number"": 2, ""note"": ""B3"" },
-							{ ""number"": 3, ""note"": ""G3"" },
-							{ ""number"": 4, ""note"": ""D3"" },
-							{ ""number"": 5, ""note"": ""A2"" },
-							{ ""number"": 6, ""note"": ""E2"" },
-							{ ""number"": 7, ""note"": ""A1"" }
-						]
-					}
-				]
-			}");
-			return path;
-		}
-
-		private static string CreateMultipleInstrumentDefinitionFile(string fileName)
-		{
-			var path = Path.Combine(Environment.CurrentDirectory, fileName);
-			File.WriteAllText(path, @"{
-				""instruments"": [
-					{
-						""name"": ""Six String"",
-						""strings"": 6,
-						""frets"": 24,
-						""openStrings"": [
-							{ ""number"": 1, ""note"": ""E4"" },
-							{ ""number"": 2, ""note"": ""B3"" },
-							{ ""number"": 3, ""note"": ""G3"" },
-							{ ""number"": 4, ""note"": ""D3"" },
-							{ ""number"": 5, ""note"": ""A2"" },
-							{ ""number"": 6, ""note"": ""E2"" }
-						]
-					},
-					{
-						""name"": ""Seven String"",
-						""strings"": 7,
-						""frets"": 24,
-						""openStrings"": [
-							{ ""number"": 1, ""note"": ""E4"" },
-							{ ""number"": 2, ""note"": ""B3"" },
-							{ ""number"": 3, ""note"": ""G3"" },
-							{ ""number"": 4, ""note"": ""D3"" },
-							{ ""number"": 5, ""note"": ""A2"" },
-							{ ""number"": 6, ""note"": ""E2"" },
-							{ ""number"": 7, ""note"": ""A1"" }
-						]
-					}
-				]
-			}");
-			return path;
+			Directory.CreateDirectory("Instruments");
+			var path = Path.Combine("Instruments", "string-instruments.json");
+			var openStrings = string.Join(",", notes.Select((note, index) => $"{{ \""number\"": {index + 1}, \""note\"": \""{note}\"" }}"));
+			File.WriteAllText(path, $"{{ \""instruments\"": [{{ \""name\"": \""{name}\"", \""strings\"": {strings}, \""frets\"": 20, \""openStrings\"": [{openStrings}] }}] }}");
 		}
 
 		private sealed class Harness
