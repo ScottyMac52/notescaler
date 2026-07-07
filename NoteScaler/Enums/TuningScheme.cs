@@ -18,6 +18,8 @@
 		OpenD,
 		[JsonProperty("dropB")]
 		DropB,
+		[JsonProperty("dropA")]
+		DropA,
 		[JsonProperty("dStandard")]
 		DStandard,
 		[JsonProperty("ebStandard")]
@@ -26,7 +28,15 @@
 		CSharpStandard,
 		[JsonProperty("dadgad")]
 		DADGAD,
+		[JsonProperty("openA")]
+		OpenA,
 		[JsonProperty("openG")]
-		OpenG
+		OpenG,
+		[JsonProperty("ukulele")]
+		Ukulele,
+		[JsonProperty("twelveStringStandard")]
+		TwelveStringStandard,
+		[JsonProperty("sevenStringDropA")]
+		SevenStringDropA
 	}
 }
