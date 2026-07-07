@@ -127,6 +127,32 @@ namespace NoteScalerTests.Services
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
+		[Fact]
+		public void Run_LoadsAndPlaysTabFileWithCustomStringInstrument()
+		{
+			CreateSevenStringTabFile("runner-seven-string-tab");
+			var instrumentDefinitionsPath = CreateSevenStringInstrumentDefinitionFile("custom-instruments.json");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--tab", "runner-seven-string-tab", "--string-instruments", instrumentDefinitionsPath, "--string-instrument", "Seven String Drop A" });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Seven String Drop A"));
+			Assert.NotNull(harness.Factory.CreatedSequence);
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_WhenMultipleCustomStringInstrumentsAreAvailableWithoutSelection_WritesError()
+		{
+			CreateTabFile("runner-tab");
+			var instrumentDefinitionsPath = CreateMultipleInstrumentDefinitionFile("multiple-instruments.json");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--tab", "runner-tab", "--string-instruments", instrumentDefinitionsPath });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Use --string-instrument to choose one"));
+		}
+
 		public void Dispose()
 		{
 			Environment.CurrentDirectory = originalCurrentDirectory;
@@ -172,6 +198,73 @@ namespace NoteScalerTests.Services
 		{
 			Directory.CreateDirectory("Tabs");
 			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), "{\"name\":\"Tab\",\"speed\":1000,\"tab\":\"1-0\",\"tuning\":\"Standard\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{\"name\":\"Lead\",\"speed\":0,\"tab\":\"1-0,2-1\",\"tuning\":\"Standard\"}]}");
+		}
+
+		private static void CreateSevenStringTabFile(string fileName)
+		{
+			Directory.CreateDirectory("Tabs");
+			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), "{\"name\":\"Seven String Tab\",\"speed\":1000,\"strings\":7,\"tab\":\"7-0\",\"tuning\":\"Standard\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{\"name\":\"Lead\",\"speed\":0,\"tab\":\"7-0,1-0\",\"tuning\":\"Standard\"}]}");
+		}
+
+		private static string CreateSevenStringInstrumentDefinitionFile(string fileName)
+		{
+			var path = Path.Combine(Environment.CurrentDirectory, fileName);
+			File.WriteAllText(path, @"{
+				""instruments"": [
+					{
+						""name"": ""Seven String Drop A"",
+						""strings"": 7,
+						""frets"": 24,
+						""openStrings"": [
+							{ ""number"": 1, ""note"": ""E4"" },
+							{ ""number"": 2, ""note"": ""B3"" },
+							{ ""number"": 3, ""note"": ""G3"" },
+							{ ""number"": 4, ""note"": ""D3"" },
+							{ ""number"": 5, ""note"": ""A2"" },
+							{ ""number"": 6, ""note"": ""E2"" },
+							{ ""number"": 7, ""note"": ""A1"" }
+						]
+					}
+				]
+			}");
+			return path;
+		}
+
+		private static string CreateMultipleInstrumentDefinitionFile(string fileName)
+		{
+			var path = Path.Combine(Environment.CurrentDirectory, fileName);
+			File.WriteAllText(path, @"{
+				""instruments"": [
+					{
+						""name"": ""Six String"",
+						""strings"": 6,
+						""frets"": 24,
+						""openStrings"": [
+							{ ""number"": 1, ""note"": ""E4"" },
+							{ ""number"": 2, ""note"": ""B3"" },
+							{ ""number"": 3, ""note"": ""G3"" },
+							{ ""number"": 4, ""note"": ""D3"" },
+							{ ""number"": 5, ""note"": ""A2"" },
+							{ ""number"": 6, ""note"": ""E2"" }
+						]
+					},
+					{
+						""name"": ""Seven String"",
+						""strings"": 7,
+						""frets"": 24,
+						""openStrings"": [
+							{ ""number"": 1, ""note"": ""E4"" },
+							{ ""number"": 2, ""note"": ""B3"" },
+							{ ""number"": 3, ""note"": ""G3"" },
+							{ ""number"": 4, ""note"": ""D3"" },
+							{ ""number"": 5, ""note"": ""A2"" },
+							{ ""number"": 6, ""note"": ""E2"" },
+							{ ""number"": 7, ""note"": ""A1"" }
+						]
+					}
+				]
+			}");
+			return path;
 		}
 
 		private sealed class Harness

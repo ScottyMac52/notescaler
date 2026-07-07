@@ -9,6 +9,8 @@
 
 	public class Guitar : IStringInstrument
 	{
+		private readonly bool isDefinitionBased;
+
 		/// <summary>
 		/// Copnstructs a Guitar!
 		/// </summary>
@@ -17,14 +19,35 @@
 		public Guitar(TuningScheme scheme = TuningScheme.Standard, int numberofFrets = 24)
 		{
 			TuningScheme = scheme;
+			Name = scheme.ToString();
 			Frets = numberofFrets;
-			InitializeStrings();
+			Capo = 0;
+			InitializeStrings(GuitarTuningCatalog.GetDefinition(TuningScheme).OpenStringNotes);
 		}
 
+		public Guitar(StringInstrumentDefinition definition)
+		{
+			if (definition == null)
+			{
+				throw new ArgumentNullException(nameof(definition));
+			}
+
+			TuningScheme = TuningScheme.Standard;
+			Name = definition.Name;
+			Frets = definition.Frets;
+			Capo = definition.EffectiveCapo;
+			isDefinitionBased = true;
+			InitializeStrings(definition.GetOpenStringNotesByStringNumber());
+		}
+
+		/// <inheritdoc/>
+		public string Name { get; }
 		/// <inheritdoc/>
 		public TuningScheme TuningScheme { get; }
 		/// <inheritdoc/>
 		public int Frets { get; }
+		/// <inheritdoc/>
+		public int Capo { get; }
 		/// <inheritdoc/>
 		public IEnumerable<IInstrumentString> Strings { get; protected set; }
 		/// <inheritdoc/>
@@ -113,15 +136,29 @@
 		/// <returns></returns>
 		public override string ToString()
 		{
+			if (isDefinitionBased)
+			{
+				return $"String instrument {Name}. Capo {Capo}. Strings {string.Join('|', Strings.Reverse().Select(s => s.Tuning))}";
+			}
+
 			return $"Guitar tuned to {TuningScheme}. Strings {string.Join('|', Strings.Reverse().Select(s => s.Tuning))}";
 		}
 
-		private void InitializeStrings()
+		private void InitializeStrings(IEnumerable<string> openStringNotes)
 		{
-			var tuningDefinition = GuitarTuningCatalog.GetDefinition(TuningScheme);
-			Strings = tuningDefinition.OpenStringNotes
-				.Select((note, index) => new GuitarString(index + 1, note, Frets))
+			Strings = openStringNotes
+				.Select((note, index) => new GuitarString(index + 1, GetSoundingOpenStringNote(note), Frets))
 				.ToList();
+		}
+
+		private string GetSoundingOpenStringNote(string note)
+		{
+			if (Capo == 0)
+			{
+				return note;
+			}
+
+			return PitchIndex.Default.GetNoteAbove(note, Capo);
 		}
 	}
 }

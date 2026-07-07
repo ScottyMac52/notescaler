@@ -7,9 +7,19 @@
 	public interface IStringInstrument
 	{
 		/// <summary>
+		/// Human-readable instrument name.
+		/// </summary>
+		string Name { get; }
+
+		/// <summary>
 		/// The number of Frets 
 		/// </summary>
 		int Frets { get; }
+
+		/// <summary>
+		/// Capo location, measured in frets from the nut.
+		/// </summary>
+		int Capo { get; }
 
 		/// <summary>
 		/// Instrument strings

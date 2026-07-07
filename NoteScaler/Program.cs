@@ -23,6 +23,7 @@
 			services.AddSingleton<IConsoleOutputService, ConsoleOutputService>();
 			services.AddSingleton<IPlayerFactory, SignalNotePlayerFactory>();
 			services.AddSingleton<IStringInstrumentFactory, StringInstrumentFactory>();
+			services.AddSingleton<IStringInstrumentDefinitionLoader, StringInstrumentDefinitionLoader>();
 			services.AddSingleton<IMusicNoteCache, MusicNoteCache>();
 			services.AddSingleton<MusicNoteScaleBuilder>();
 			services.AddSingleton<MusicNoteFrequencyCalculator>();
