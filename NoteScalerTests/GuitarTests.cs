@@ -32,7 +32,13 @@
 				new { Tuning = TuningScheme.DropCSharp, Notes = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "C#2" } },
 				new { Tuning = TuningScheme.DropD, Notes = new[] { "D4", "B3", "G3", "D3", "A2", "D2" } },
 				new { Tuning = TuningScheme.OpenC, Notes = new[] { "E4", "C3", "G3", "C3", "G2", "C2" } },
-				new { Tuning = TuningScheme.OpenD, Notes = new[] { "D4", "A3", "F#3", "D3", "A2", "D2" } }
+				new { Tuning = TuningScheme.OpenD, Notes = new[] { "D4", "A3", "F#3", "D3", "A2", "D2" } },
+				new { Tuning = TuningScheme.DropB, Notes = new[] { "C#4", "G#3", "E3", "B2", "F#2", "B1" } },
+				new { Tuning = TuningScheme.DStandard, Notes = new[] { "D4", "A3", "F3", "C3", "G2", "D2" } },
+				new { Tuning = TuningScheme.EbStandard, Notes = new[] { "D#4", "A#3", "F#3", "C#3", "G#2", "D#2" } },
+				new { Tuning = TuningScheme.CSharpStandard, Notes = new[] { "C#4", "G#3", "E3", "B2", "F#2", "C#2" } },
+				new { Tuning = TuningScheme.DADGAD, Notes = new[] { "D4", "A3", "G3", "D3", "A2", "D2" } },
+				new { Tuning = TuningScheme.OpenG, Notes = new[] { "D4", "B3", "G3", "D3", "G2", "D2" } }
 			};
 
 			foreach (var currentCase in cases)
