@@ -4,7 +4,6 @@ namespace NoteScaler.Services
 	using NoteScaler.Models;
 	using NoteScaler.Services.Interfaces;
 	using System;
-	using System.Collections.Generic;
 	using System.IO;
 	using System.Linq;
 
@@ -48,7 +47,7 @@ namespace NoteScaler.Services
 			}
 
 			var duplicateName = instruments
-				.Where(instrument => !string.IsNullOrWhiteSpace(instrument.Name))
+				.Where(instrument => instrument != null && !string.IsNullOrWhiteSpace(instrument.Name))
 				.GroupBy(instrument => instrument.Name, StringComparer.InvariantCultureIgnoreCase)
 				.FirstOrDefault(group => group.Count() > 1);
 			if (duplicateName != null)
@@ -99,6 +98,11 @@ namespace NoteScaler.Services
 			if (strings == null || strings.Length != instrument.NumberOfStrings)
 			{
 				return $"String instrument {instrument.Name} must define exactly {instrument.NumberOfStrings} open strings.";
+			}
+
+			if (strings.Any(stringDefinition => stringDefinition == null))
+			{
+				return $"String instrument {instrument.Name} has a null string definition.";
 			}
 
 			var duplicateString = strings
