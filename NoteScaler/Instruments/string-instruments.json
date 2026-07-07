@@ -1,0 +1,16 @@
+{
+  "instruments": [
+    {
+      "name": "Baritone Ukulele",
+      "strings": 4,
+      "frets": 20,
+      "capo": 0,
+      "openStrings": [
+        { "number": 1, "note": "E4" },
+        { "number": 2, "note": "B3" },
+        { "number": 3, "note": "G3" },
+        { "number": 4, "note": "D3" }
+      ]
+    }
+  ]
+}
