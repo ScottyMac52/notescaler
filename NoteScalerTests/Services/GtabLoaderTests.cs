@@ -19,9 +19,9 @@ namespace NoteScalerTests.Services
 		}
 
 		[Fact]
-		public void Load_WhenValidGtabExistsInGtabDirectory_ReturnsTablature()
+		public void Load_WhenValidGuitarTabMakerGtabExistsInGtabDirectory_ReturnsTablature()
 		{
-			CreateGtabFile("mary.gtab", "{\"schemaVersion\":1,\"name\":\"Mary\",\"speed\":1500,\"tuning\":\"Standard\",\"tab\":\"1-0,2-1\",\"repeat\":2,\"strings\":6}");
+			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
 			var loader = new GtabLoader();
 
 			var result = loader.Load("mary.gtab", out var errorString, out var tablature);
@@ -29,17 +29,29 @@ namespace NoteScalerTests.Services
 			Assert.True(result, errorString);
 			Assert.Null(errorString);
 			Assert.Equal("Mary", tablature.Name);
-			Assert.Equal(1500, tablature.Speed);
+			Assert.Equal(500, tablature.Speed);
 			Assert.Equal("Standard", tablature.Tuning);
-			Assert.Equal("1-0,2-1", tablature.TabString);
-			Assert.Equal(2, tablature.Repeat);
+			Assert.Equal("4-2-2,5-0", tablature.TabString);
+			Assert.Equal(1, tablature.Repeat);
 			Assert.Equal(6, tablature.NumberOfStrings);
+		}
+
+		[Fact]
+		public void Load_WhenGtabColumnContainsMultipleFrets_ConvertsColumnToChordGroup()
+		{
+			CreateGtabFile("chord.gtab", CreateGuitarTabMakerGtab("Chord", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
+			var loader = new GtabLoader();
+
+			var result = loader.Load("chord.gtab", out var errorString, out var tablature);
+
+			Assert.True(result, errorString);
+			Assert.Equal("5-0|4-2", tablature.TabString);
 		}
 
 		[Fact]
 		public void Load_WhenExtensionIsOmitted_AddsGtabExtension()
 		{
-			CreateGtabFile("mary.gtab", "{\"schemaVersion\":1,\"name\":\"Mary\",\"speed\":1500,\"tuning\":\"Standard\",\"tab\":\"1-0\"}");
+			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
 			var loader = new GtabLoader();
 
 			var result = loader.Load("mary", out var errorString, out var tablature);
@@ -49,29 +61,29 @@ namespace NoteScalerTests.Services
 		}
 
 		[Fact]
-		public void Load_WhenSchemaVersionIsUnsupported_ReturnsValidationError()
+		public void Load_WhenTuningIsUnsupported_ReturnsValidationError()
 		{
-			CreateGtabFile("future.gtab", "{\"schemaVersion\":2,\"name\":\"Future\",\"speed\":1500,\"tuning\":\"Standard\",\"tab\":\"1-0\"}");
+			CreateGtabFile("weird.gtab", "{\"cFret\":0,\"title\":\"Weird\",\"tempo\":120,\"stringNotes\":[\"Q\",\"A\",\"D\",\"G\",\"B\",\"E\"],\"version\":5,\"lyricSize\":100,\"tabRows\":[{\"columns\":[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]],\"columnHeaders\":[],\"lyricLines\":[],\"lyrics\":\"\"}]} ");
 			var loader = new GtabLoader();
 
-			var result = loader.Load("future.gtab", out var errorString, out var tablature);
+			var result = loader.Load("weird.gtab", out var errorString, out var tablature);
 
 			Assert.False(result);
 			Assert.Null(tablature);
-			Assert.Contains("Unsupported .gtab schemaVersion", errorString);
+			Assert.Contains("Unsupported .gtab tuning", errorString);
 		}
 
 		[Fact]
 		public void Load_WhenRequiredFieldIsMissing_ReturnsValidationError()
 		{
-			CreateGtabFile("invalid.gtab", "{\"schemaVersion\":1,\"name\":\"Invalid\",\"speed\":1500,\"tab\":\"1-0\"}");
+			CreateGtabFile("invalid.gtab", "{\"cFret\":0,\"title\":\"Invalid\",\"tempo\":120,\"version\":5,\"tabRows\":[]}");
 			var loader = new GtabLoader();
 
 			var result = loader.Load("invalid.gtab", out var errorString, out var tablature);
 
 			Assert.False(result);
 			Assert.Null(tablature);
-			Assert.Contains("tuning", errorString.ToLowerInvariant());
+			Assert.Contains("stringNotes", errorString);
 		}
 
 		[Fact]
@@ -99,6 +111,11 @@ namespace NoteScalerTests.Services
 		{
 			Directory.CreateDirectory("GTabs");
 			File.WriteAllText(Path.Combine("GTabs", fileName), contents);
+		}
+
+		private static string CreateGuitarTabMakerGtab(string title, int tempo, string columns)
+		{
+			return $"{{\"cFret\":0,\"title\":\"{title}\",\"tempo\":{tempo},\"stringNotes\":[\"E\",\"A\",\"D\",\"G\",\"B\",\"E\"],\"version\":5,\"lyricSize\":100,\"tabRows\":[{{\"lyricLines\":[],\"columnHeaders\":[],\"columns\":{columns},\"lyrics\":\"\"}}]}}";
 		}
 	}
 }
