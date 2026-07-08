@@ -71,7 +71,7 @@ namespace NoteScalerTests.Services
 
 			Assert.False(result);
 			Assert.Null(tablature);
-			Assert.Contains("tuning", errorString, StringComparison.InvariantCultureIgnoreCase);
+			Assert.Contains("tuning", errorString.ToLowerInvariant());
 		}
 
 		[Fact]
