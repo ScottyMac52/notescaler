@@ -140,7 +140,20 @@ namespace NoteScalerTests.Services
 			harness.Runner.Run(new[] { "--gtab", "runner-gtab.gtab" });
 
 			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Standard"));
+			Assert.False(harness.Console.Messages.Any(message => message.Contains("Converted NoteScaler tab:")));
 			Assert.NotNull(harness.Factory.CreatedSequence);
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_WhenDumpTabIsRequestedForGtabFile_WritesConvertedTabStringAndKeepsGtabPlayback()
+		{
+			CreateGtabFile("runner-gtab.gtab", "Standard");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--gtab", "runner-gtab.gtab", "--dump-tab" });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Converted NoteScaler tab: 4-2,5-0"));
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
@@ -153,6 +166,21 @@ namespace NoteScalerTests.Services
 
 			harness.Runner.Run(new[] { "--gtab", "runner-midi-gtab.gtab", "--export-midi", outputPath });
 
+			Assert.True(File.Exists(outputPath));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Exported MIDI"));
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_WhenDumpTabAndExportMidiAreRequestedForGtabFile_WritesDumpMidiAndKeepsPlayback()
+		{
+			CreateGtabFile("runner-dump-midi-gtab.gtab", "Standard");
+			var outputPath = Path.Combine(testDirectory, "runner-dump-midi-gtab.mid");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--gtab", "runner-dump-midi-gtab.gtab", "--dump-tab", "--export-midi", outputPath });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Converted NoteScaler tab: 4-2,5-0"));
 			Assert.True(File.Exists(outputPath));
 			Assert.Contains(harness.Console.Messages, message => message.Contains("Exported MIDI"));
 			Assert.True(harness.Player.PlayCount > 0);
