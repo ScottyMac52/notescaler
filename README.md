@@ -173,7 +173,7 @@ The first supported shape looks like this:
 }
 ```
 
-The required fields are `title`, `stringNotes`, and `tabRows`. The loader uses numeric `p` values as frets, treats `—` as an empty string cell, ignores non-numeric technique markers in this first slice, and maps known `stringNotes` arrays such as `E,A,D,G,B,E` to existing NoteScaler tunings. `tempo` is captured, but current playback timing still comes from the command-line `--speed` option.
+The required fields are `title`, `stringNotes`, and `tabRows`. The loader uses numeric `p` values as frets, treats `—` as an empty string cell, ignores non-numeric technique markers in this first slice, and maps known `stringNotes` arrays such as `E,A,D,G,B,E` to existing NoteScaler tunings. `tempo` is captured, but current playback timing still comes from the command-line `--speed` option. Both sharp and flat aliases are recognized for the currently supported lowered standard tunings.
 
 See `docs/gtab-schema.md` for the detailed Guitar Tab Maker adapter notes.
 
