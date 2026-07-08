@@ -24,7 +24,7 @@ The loader adapts the Guitar Tab Maker shape into NoteScaler's existing `Tablatu
 |---|---|---|
 | `cFret` | number | Capo fret. The loader adds this value to parsed fret numbers when converting to NoteScaler tab notation. |
 | `title` | string | Song or tab title. Maps to `Tablature.Name`. |
-| `tempo` | number | Beats per minute from Guitar Tab Maker. The loader stores an approximate measure time as `60000 / tempo`. |
+| `tempo` | number | Beats per minute from Guitar Tab Maker. The loader stores an approximate measure time as `60000 / tempo`, but current playback still uses the command-line `--speed` measure time. |
 | `stringNotes` | string array | Open string notes in low-to-high order, for example `E,A,D,G,B,E`. |
 | `version` | number | Guitar Tab Maker document version. The first observed sample uses version `5`. |
 | `lyricSize` | number | Preserved app metadata. Not used by NoteScaler playback in this slice. |
@@ -149,4 +149,5 @@ After loading, the `.gtab` document is normalized into the existing `Tablature` 
 - Lyrics are parsed as part of the document shape but not used for playback.
 - Style metadata is ignored.
 - Non-numeric markers such as hammer-on markers are ignored in this first loader slice.
+- `tempo` is captured, but current playback timing still comes from the command-line `--speed` option.
 - Unsupported tunings need a follow-up mapping or a generated supplemental instrument definition.
