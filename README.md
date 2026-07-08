@@ -64,6 +64,12 @@ Play a Guitar Tab Maker `.gtab` file named `maryhadalittlelamb.gtab` from the `G
  dotnet run --project NoteScaler -- --gtab maryhadalittlelamb
 ```
 
+Dump the converted NoteScaler tab string for a `.gtab` file before playback:
+
+```bash
+ dotnet run --project NoteScaler -- --gtab maryhadalittlelamb --dump-tab
+```
+
 Play a `.gtab` file and export it to MIDI:
 
 ```bash
@@ -175,6 +181,8 @@ The first supported shape looks like this:
 
 The required fields are `title`, `stringNotes`, and `tabRows`. The loader uses numeric `p` values as frets, treats `—` as an empty string cell, ignores non-numeric technique markers in this first slice, and maps known `stringNotes` arrays such as `E,A,D,G,B,E` to existing NoteScaler tunings. Empty columns between fretted columns, plus trailing empty columns, are folded into duration multipliers. `tempo` is captured, but current playback timing still comes from the command-line `--speed` option. Both sharp and flat aliases are recognized for the currently supported lowered standard tunings.
 
+Use `--dump-tab` with `--gtab` to print the converted NoteScaler tab string before playback. This is useful when a `.gtab` file sounds wrong and you need to inspect the intermediate conversion.
+
 See `docs/gtab-schema.md` for the detailed Guitar Tab Maker adapter notes.
 
 ## MIDI export
@@ -215,6 +223,7 @@ The MIDI file contains note-on and note-off events derived from the resolved not
 | `-f` | `--file` | `null` | Plays a JSON song file from the `Songs` directory. Pass the file name without `.json`. |
 | `-t` | `--tab` | `null` | Plays a JSON tab file from the `Tabs` directory. Pass the file name without `.json`. |
 |  | `--gtab` | `null` | Plays a Guitar Tab Maker `.gtab` file from the `GTabs` directory or from an explicit path. The `.gtab` extension is optional. |
+|  | `--dump-tab` | `false` | Writes the converted NoteScaler tab string before tab or `.gtab` playback. |
 |  | `--export-midi` | `null` | Writes a MIDI file when playing a tab, `.gtab`, or song file. |
 
 ## Operation order
@@ -225,8 +234,8 @@ When multiple operation options are supplied, NoteScaler processes them in this 
 2. Apply `--prewait` if configured.
 3. Create the playable sequence.
 4. Process `--note` if supplied.
-5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog. If `--export-midi` is supplied, a MIDI file is written before tab playback.
-6. Process `--gtab` if supplied. The Guitar Tab Maker `.gtab` document is normalized into the existing tablature path. If `--export-midi` is supplied, a MIDI file is written before `.gtab` playback.
+5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog. If `--dump-tab` is supplied, the normalized tab string is written before playback. If `--export-midi` is supplied, a MIDI file is written before tab playback.
+6. Process `--gtab` if supplied. The Guitar Tab Maker `.gtab` document is normalized into the existing tablature path. If `--dump-tab` is supplied, the converted NoteScaler tab string is written before playback. If `--export-midi` is supplied, a MIDI file is written before `.gtab` playback.
 7. Process `--file` if supplied. If `--export-midi` is supplied, a MIDI file is written before song playback.
 
 That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, `--gtab`, or `--file`.
