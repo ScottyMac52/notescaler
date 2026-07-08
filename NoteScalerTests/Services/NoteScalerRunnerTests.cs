@@ -274,7 +274,8 @@ namespace NoteScalerTests.Services
 		private static void CreateGtabFile(string fileName, string tuning)
 		{
 			Directory.CreateDirectory("GTabs");
-			File.WriteAllText(Path.Combine("GTabs", fileName), $"{{\"schemaVersion\":1,\"name\":\"Gtab\",\"speed\":1000,\"tab\":\"1-0,2-1\",\"tuning\":\"{tuning}\",\"repeat\":1,\"strings\":6}}");
+			var stringNotes = tuning == "Standard" ? "[\"E\",\"A\",\"D\",\"G\",\"B\",\"E\"]" : "[\"E\",\"A\",\"D\",\"G\",\"B\",\"E\"]";
+			File.WriteAllText(Path.Combine("GTabs", fileName), $"{{\"cFret\":0,\"title\":\"Gtab\",\"tempo\":120,\"stringNotes\":{stringNotes},\"version\":5,\"lyricSize\":100,\"tabRows\":[{{\"lyricLines\":[],\"columnHeaders\":[],\"columns\":[[{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"2\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}}],[{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"0\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}}]],\"lyrics\":\"\"}}]}}");
 		}
 
 		private static void CreateSevenStringTabFile(string fileName)
