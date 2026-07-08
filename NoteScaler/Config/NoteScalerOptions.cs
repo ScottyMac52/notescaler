@@ -33,5 +33,8 @@
 
 		[Option('t', "tab", Default = null, HelpText = "Name of the tab file to play from the Tabs directory.")]
 		public string Tab { get; set; }
+
+		[Option("export-midi", Default = null, HelpText = "Path to a MIDI file to export when playing a tab.")]
+		public string ExportMidi { get; set; }
 	}
 }
