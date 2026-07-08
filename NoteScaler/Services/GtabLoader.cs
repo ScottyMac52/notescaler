@@ -19,7 +19,9 @@ namespace NoteScaler.Services
 			{ "D,A,D,G,B,E", "Drop D" },
 			{ "D,G,C,F,A,D", "D Standard" },
 			{ "D#,G#,C#,F#,A#,D#", "Eb Standard" },
-			{ "C#,F#,B,E,G#,C#", "C# Standard" }
+			{ "Eb,Ab,Db,Gb,Bb,Eb", "Eb Standard" },
+			{ "C#,F#,B,E,G#,C#", "C# Standard" },
+			{ "Db,Gb,B,E,Ab,Db", "C# Standard" }
 		};
 
 		public bool Load(string gtabName, out string errorString, out Tablature tablature)
