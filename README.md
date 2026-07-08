@@ -1,6 +1,6 @@
 # NoteScaler
 
-NoteScaler is a command-line music practice tool. It can display note details, play scales for a note, play song JSON files from the `Songs` directory, and play tablature JSON files from the `Tabs` directory.
+NoteScaler is a command-line music practice tool. It can display note details, play scales for a note, play song JSON files from the `Songs` directory, play tablature JSON files from the `Tabs` directory, and play `.gtab` files from the `GTabs` directory.
 
 This README focuses only on running the tool and using the command-line options.
 
@@ -56,6 +56,18 @@ Play a tab file named `anotherbrickinthewallpart2.json` from the `Tabs` director
 
 ```bash
  dotnet run --project NoteScaler -- --tab anotherbrickinthewallpart2
+```
+
+Play a `.gtab` file named `maryhadalittlelamb.gtab` from the `GTabs` directory:
+
+```bash
+ dotnet run --project NoteScaler -- --gtab maryhadalittlelamb
+```
+
+Play a `.gtab` file and export it to MIDI:
+
+```bash
+ dotnet run --project NoteScaler -- --gtab maryhadalittlelamb.gtab --export-midi maryhadalittlelamb.mid
 ```
 
 Play a tab whose JSON file references an instrument by name:
@@ -127,6 +139,24 @@ Supplemental instruments use this JSON shape:
 
 Base instrument names are immutable. If the supplemental file defines a name or alias that already exists in the embedded base catalog, the embedded base definition wins.
 
+## .gtab files
+
+`.gtab` files are JSON documents with a versioned schema. They are loaded from `GTabs` when the command value is a simple file name.
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "Mary Had A Little Lamb",
+  "speed": 1500,
+  "tuning": "Standard",
+  "tab": "1-0,2-1,3-0",
+  "repeat": 1,
+  "strings": 6
+}
+```
+
+The required fields are `schemaVersion`, `name`, `tuning`, and `tab`. Schema version `1` is the only supported version in this first loader slice.
+
 ## MIDI export
 
 MIDI export is file-based. It does not require a MIDI-capable guitar amp.
@@ -137,13 +167,19 @@ When `--export-midi` is supplied with `--tab`, NoteScaler writes a standard `.mi
  dotnet run --project NoteScaler -- --tab anotherbrickinthewallpart2 --export-midi anotherbrickinthewallpart2.mid
 ```
 
+When `--export-midi` is supplied with `--gtab`, NoteScaler normalizes the `.gtab` document into the existing tablature playback path, writes a standard `.mid` file from the guitar performance events, and then continues normal playback.
+
+```bash
+ dotnet run --project NoteScaler -- --gtab maryhadalittlelamb --export-midi maryhadalittlelamb.mid
+```
+
 When `--export-midi` is supplied with `--file`, NoteScaler writes a standard `.mid` file from the converted song note sequence and then continues normal song playback.
 
 ```bash
  dotnet run --project NoteScaler -- --file maryhadalittlelamb --export-midi mary.mid --speed 1500
 ```
 
-The MIDI file contains note-on and note-off events derived from the resolved note sequence. Tab export uses guitar performance events. Song export uses the prepared composite note sequence that playback also consumes.
+The MIDI file contains note-on and note-off events derived from the resolved note sequence. Tab and `.gtab` export use guitar performance events. Song export uses the prepared composite note sequence that playback also consumes.
 
 ## Command-line options
 
@@ -158,7 +194,8 @@ The MIDI file contains note-on and note-off events derived from the resolved not
 | `-n` | `--note` | `null` | Displays details for a note and plays its major, minor, and relative minor scales. |
 | `-f` | `--file` | `null` | Plays a JSON song file from the `Songs` directory. Pass the file name without `.json`. |
 | `-t` | `--tab` | `null` | Plays a JSON tab file from the `Tabs` directory. Pass the file name without `.json`. |
-|  | `--export-midi` | `null` | Writes a MIDI file when playing a tab or song file. |
+|  | `--gtab` | `null` | Plays a `.gtab` file from the `GTabs` directory or from an explicit path. The `.gtab` extension is optional. |
+|  | `--export-midi` | `null` | Writes a MIDI file when playing a tab, `.gtab`, or song file. |
 
 ## Operation order
 
@@ -169,9 +206,10 @@ When multiple operation options are supplied, NoteScaler processes them in this 
 3. Create the playable sequence.
 4. Process `--note` if supplied.
 5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog. If `--export-midi` is supplied, a MIDI file is written before tab playback.
-6. Process `--file` if supplied. If `--export-midi` is supplied, a MIDI file is written before song playback.
+6. Process `--gtab` if supplied. The `.gtab` document is normalized into the existing tablature path. If `--export-midi` is supplied, a MIDI file is written before `.gtab` playback.
+7. Process `--file` if supplied. If `--export-midi` is supplied, a MIDI file is written before song playback.
 
-That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, or `--file`.
+That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, `--gtab`, or `--file`.
 
 ## Flow chart
 
@@ -197,20 +235,27 @@ flowchart TD
 
     N -->|Yes| O[Load tab file from Tabs]
     O --> P{Tab loaded?}
-    P -->|Yes| Q[Apply tab defaults and tuning]
+    P -->|Yes| Q[Normalize to tablature playback path]
     Q --> R[Resolve string instrument from JSON catalogs]
     R --> S{--export-midi supplied?}
     S -->|Yes| T[Write MIDI file]
-    S -->|No| U[Convert tab frets to notes]
+    S -->|No| U[Convert frets to notes]
     T --> U
     U --> V[Prepare and play tab sequence]
     P -->|No| W[Write tab load error]
-    N -->|No| X{--file supplied?}
+    N -->|No| X{--gtab supplied?}
     V --> X
     W --> X
 
-    X -->|Yes| Y[Load song file from Songs]
-    Y --> AA{Song loaded?}
+    X -->|Yes| XA[Load .gtab file]
+    XA --> XB{.gtab loaded?}
+    XB -->|Yes| Q
+    XB -->|No| XC[Write .gtab load error]
+    X -->|No| Y{--file supplied?}
+    XC --> Y
+
+    Y -->|Yes| Z1[Load song file from Songs]
+    Z1 --> AA{Song loaded?}
     AA -->|Yes| AB[Select requested/default key]
     AB --> AC[Prepare song sequence]
     AC --> AD{--export-midi supplied?}
@@ -218,7 +263,7 @@ flowchart TD
     AD -->|No| AF[Play song sequence]
     AE --> AF
     AA -->|No| AG[Write song load error]
-    X -->|No| Z[Exit]
+    Y -->|No| Z[Exit]
     AF --> Z
     AG --> Z
 ```
