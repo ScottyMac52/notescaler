@@ -20,17 +20,32 @@ namespace NoteScaler.Services
 		private readonly IPlayableSequenceFactory playableSequenceFactory;
 		private readonly IStringInstrumentFactory stringInstrumentFactory;
 		private readonly IConsoleOutputService consoleOutputService;
+		private readonly IGuitarPerformanceEventFactory guitarPerformanceEventFactory;
+		private readonly IMidiFileExporter midiFileExporter;
 
 		public NoteScalerRunner(
 			ICommandLineOptionsService commandLineOptionsService,
 			IPlayableSequenceFactory playableSequenceFactory,
 			IStringInstrumentFactory stringInstrumentFactory,
 			IConsoleOutputService consoleOutputService)
+			: this(commandLineOptionsService, playableSequenceFactory, stringInstrumentFactory, consoleOutputService, new GuitarPerformanceEventFactory(), new MidiFileExporter())
+		{
+		}
+
+		public NoteScalerRunner(
+			ICommandLineOptionsService commandLineOptionsService,
+			IPlayableSequenceFactory playableSequenceFactory,
+			IStringInstrumentFactory stringInstrumentFactory,
+			IConsoleOutputService consoleOutputService,
+			IGuitarPerformanceEventFactory guitarPerformanceEventFactory,
+			IMidiFileExporter midiFileExporter)
 		{
 			this.commandLineOptionsService = commandLineOptionsService;
 			this.playableSequenceFactory = playableSequenceFactory;
 			this.stringInstrumentFactory = stringInstrumentFactory;
 			this.consoleOutputService = consoleOutputService;
+			this.guitarPerformanceEventFactory = guitarPerformanceEventFactory;
+			this.midiFileExporter = midiFileExporter;
 		}
 
 		public int Run(string[] args)
@@ -53,7 +68,7 @@ namespace NoteScaler.Services
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
 				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
-				PlayTabAsRequired(tabName, playableSequence);
+				PlayTabAsRequired(tabName, options.ExportMidi, playableSequence);
 				PlaySongAsRequired(key, fileName, playableSequence);
 			}
 			finally
@@ -182,7 +197,7 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlayTabAsRequired(string tabName, PlayableSequence playableSequence)
+		private void PlayTabAsRequired(string tabName, string exportMidi, PlayableSequence playableSequence)
 		{
 			if (!string.IsNullOrEmpty(tabName))
 			{
@@ -200,11 +215,31 @@ namespace NoteScaler.Services
 						return;
 					}
 
+					ExportTabToMidiAsRequired(exportMidi, stringInstrument, tabs, playableSequence.MeasureTime);
 					playableSequence.ConvertTabsToNoteSequence(stringInstrument, tabs);
 					playableSequence.Repeat = tabs.Repeat;
 					playableSequence.Prepare();
 					playableSequence.Play();
 				}
+			}
+		}
+
+		private void ExportTabToMidiAsRequired(string exportMidi, IStringInstrument stringInstrument, Tablature tabs, int measureTime)
+		{
+			if (string.IsNullOrWhiteSpace(exportMidi))
+			{
+				return;
+			}
+
+			try
+			{
+				var performanceEvents = guitarPerformanceEventFactory.Create(stringInstrument, tabs, measureTime);
+				midiFileExporter.Export(performanceEvents, exportMidi);
+				consoleOutputService.WriteMessage($"Exported MIDI: {exportMidi}");
+			}
+			catch (Exception ex)
+			{
+				consoleOutputService.WriteMessage(ex.Message, ConsoleColor.Red);
 			}
 		}
 
