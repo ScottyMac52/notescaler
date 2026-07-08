@@ -31,7 +31,8 @@ namespace NoteScalerTests.Services
 			new object[] { Array.Empty<string>() },
 			new object[] { new[] { "--note", "Nope" } },
 			new object[] { new[] { "--file", "missing-song" } },
-			new object[] { new[] { "--tab", "missing-tab" } }
+			new object[] { new[] { "--tab", "missing-tab" } },
+			new object[] { new[] { "--gtab", "missing-gtab" } }
 		};
 
 		[Theory]
@@ -48,6 +49,7 @@ namespace NoteScalerTests.Services
 		[Theory]
 		[InlineData("--file", "missing-song", "File not found")]
 		[InlineData("--tab", "missing-tab", "File not found")]
+		[InlineData("--gtab", "missing-gtab", "File not found")]
 		[InlineData("--note", "Nope", "Nope is NOT a valid note!")]
 		public void Run_WritesExpectedErrorsForInvalidInputs(string option, string value, string expectedMessage)
 		{
@@ -126,6 +128,33 @@ namespace NoteScalerTests.Services
 
 			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Standard"));
 			Assert.NotNull(harness.Factory.CreatedSequence);
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_LoadsAndPlaysGtabFile()
+		{
+			CreateGtabFile("runner-gtab.gtab", "Standard");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--gtab", "runner-gtab.gtab" });
+
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Using string instrument: Standard"));
+			Assert.NotNull(harness.Factory.CreatedSequence);
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
+		[Fact]
+		public void Run_WhenExportMidiIsRequestedForGtabFile_WritesMidiFileAndKeepsGtabPlayback()
+		{
+			CreateGtabFile("runner-midi-gtab.gtab", "Standard");
+			var outputPath = Path.Combine(testDirectory, "runner-midi-gtab.mid");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--gtab", "runner-midi-gtab.gtab", "--export-midi", outputPath });
+
+			Assert.True(File.Exists(outputPath));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Exported MIDI"));
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
@@ -240,6 +269,13 @@ namespace NoteScalerTests.Services
 		{
 			Directory.CreateDirectory("Tabs");
 			File.WriteAllText(Path.Combine("Tabs", $"{fileName}.json"), $"{{\"name\":\"Tab\",\"speed\":1000,\"tab\":\"1-0\",\"tuning\":\"{tuning}\",\"repeat\":1,\"default\":\"Lead\",\"versions\":[{{\"name\":\"Lead\",\"speed\":0,\"tab\":\"1-0,2-1\",\"tuning\":\"{tuning}\"}}]}}");
+		}
+
+		private static void CreateGtabFile(string fileName, string tuning)
+		{
+			Directory.CreateDirectory("GTabs");
+			var stringNotes = tuning == "Standard" ? "[\"E\",\"A\",\"D\",\"G\",\"B\",\"E\"]" : "[\"E\",\"A\",\"D\",\"G\",\"B\",\"E\"]";
+			File.WriteAllText(Path.Combine("GTabs", fileName), $"{{\"cFret\":0,\"title\":\"Gtab\",\"tempo\":120,\"stringNotes\":{stringNotes},\"version\":5,\"lyricSize\":100,\"tabRows\":[{{\"lyricLines\":[],\"columnHeaders\":[],\"columns\":[[{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"2\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}}],[{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"0\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}},{{\"p\":\"—\",\"s\":\"\"}}]],\"lyrics\":\"\"}}]}}");
 		}
 
 		private static void CreateSevenStringTabFile(string fileName)

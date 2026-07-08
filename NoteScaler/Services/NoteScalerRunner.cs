@@ -22,13 +22,14 @@ namespace NoteScaler.Services
 		private readonly IConsoleOutputService consoleOutputService;
 		private readonly IGuitarPerformanceEventFactory guitarPerformanceEventFactory;
 		private readonly IMidiFileExporter midiFileExporter;
+		private readonly IGtabLoader gtabLoader;
 
 		public NoteScalerRunner(
 			ICommandLineOptionsService commandLineOptionsService,
 			IPlayableSequenceFactory playableSequenceFactory,
 			IStringInstrumentFactory stringInstrumentFactory,
 			IConsoleOutputService consoleOutputService)
-			: this(commandLineOptionsService, playableSequenceFactory, stringInstrumentFactory, consoleOutputService, new GuitarPerformanceEventFactory(), new MidiFileExporter())
+			: this(commandLineOptionsService, playableSequenceFactory, stringInstrumentFactory, consoleOutputService, new GuitarPerformanceEventFactory(), new MidiFileExporter(), new GtabLoader())
 		{
 		}
 
@@ -39,6 +40,18 @@ namespace NoteScaler.Services
 			IConsoleOutputService consoleOutputService,
 			IGuitarPerformanceEventFactory guitarPerformanceEventFactory,
 			IMidiFileExporter midiFileExporter)
+			: this(commandLineOptionsService, playableSequenceFactory, stringInstrumentFactory, consoleOutputService, guitarPerformanceEventFactory, midiFileExporter, new GtabLoader())
+		{
+		}
+
+		public NoteScalerRunner(
+			ICommandLineOptionsService commandLineOptionsService,
+			IPlayableSequenceFactory playableSequenceFactory,
+			IStringInstrumentFactory stringInstrumentFactory,
+			IConsoleOutputService consoleOutputService,
+			IGuitarPerformanceEventFactory guitarPerformanceEventFactory,
+			IMidiFileExporter midiFileExporter,
+			IGtabLoader gtabLoader)
 		{
 			this.commandLineOptionsService = commandLineOptionsService;
 			this.playableSequenceFactory = playableSequenceFactory;
@@ -46,6 +59,7 @@ namespace NoteScaler.Services
 			this.consoleOutputService = consoleOutputService;
 			this.guitarPerformanceEventFactory = guitarPerformanceEventFactory;
 			this.midiFileExporter = midiFileExporter;
+			this.gtabLoader = gtabLoader;
 		}
 
 		public int Run(string[] args)
@@ -63,12 +77,13 @@ namespace NoteScaler.Services
 
 			try
 			{
-				InitializeNoteScalerOptions(options, out var a4Reference, out var key, out var fileName, out var tabName);
+				InitializeNoteScalerOptions(options, out var a4Reference, out var key, out var fileName, out var tabName, out var gtabName);
 				var playableSequence = playableSequenceFactory.Create(options, a4Reference);
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
 				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
 				PlayTabAsRequired(tabName, options.ExportMidi, playableSequence);
+				PlayGtabAsRequired(gtabName, options.ExportMidi, playableSequence);
 				PlaySongAsRequired(key, fileName, options.ExportMidi, playableSequence);
 			}
 			finally
@@ -117,11 +132,12 @@ namespace NoteScaler.Services
 			consoleOutputService.WriteMessage($"Event: {e.EventType} -> {e.EventDetails}", textColor);
 		}
 
-		private void InitializeNoteScalerOptions(NoteScalerOptions options, out int a4Reference, out string key, out string fileName, out string tabName)
+		private void InitializeNoteScalerOptions(NoteScalerOptions options, out int a4Reference, out string key, out string fileName, out string tabName, out string gtabName)
 		{
 			key = options.Key;
 			fileName = options.File;
 			tabName = options.Tab;
+			gtabName = options.Gtab;
 			var pause = options.Speed.GetValueOrDefault() * options.PreWait.GetValueOrDefault();
 			a4Reference = options.Range.GetValueOrDefault();
 			if (pause > 0)
@@ -209,20 +225,41 @@ namespace NoteScaler.Services
 				}
 				else
 				{
-					tabs.FixUp();
-					var stringInstrument = CreateStringInstrumentForTab(tabs);
-					if (stringInstrument == null)
-					{
-						return;
-					}
-
-					ExportTabToMidiAsRequired(exportMidi, stringInstrument, tabs, playableSequence.MeasureTime);
-					playableSequence.ConvertTabsToNoteSequence(stringInstrument, tabs);
-					playableSequence.Repeat = tabs.Repeat;
-					playableSequence.Prepare();
-					playableSequence.Play();
+					PlayTablature(tabs, exportMidi, playableSequence);
 				}
 			}
+		}
+
+		private void PlayGtabAsRequired(string gtabName, string exportMidi, PlayableSequence playableSequence)
+		{
+			if (!string.IsNullOrEmpty(gtabName))
+			{
+				var result = gtabLoader.Load(gtabName, out var errorString, out var tabs);
+				if (!result)
+				{
+					consoleOutputService.WriteMessage(errorString, ConsoleColor.Red);
+				}
+				else
+				{
+					PlayTablature(tabs, exportMidi, playableSequence);
+				}
+			}
+		}
+
+		private void PlayTablature(Tablature tabs, string exportMidi, PlayableSequence playableSequence)
+		{
+			tabs.FixUp();
+			var stringInstrument = CreateStringInstrumentForTab(tabs);
+			if (stringInstrument == null)
+			{
+				return;
+			}
+
+			ExportTabToMidiAsRequired(exportMidi, stringInstrument, tabs, playableSequence.MeasureTime);
+			playableSequence.ConvertTabsToNoteSequence(stringInstrument, tabs);
+			playableSequence.Repeat = tabs.Repeat;
+			playableSequence.Prepare();
+			playableSequence.Play();
 		}
 
 		private void ExportTabToMidiAsRequired(string exportMidi, IStringInstrument stringInstrument, Tablature tabs, int measureTime)
