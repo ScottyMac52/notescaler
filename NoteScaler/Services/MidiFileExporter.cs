@@ -18,12 +18,23 @@ namespace NoteScaler.Services
 
 		public void Export(IEnumerable<GuitarPerformanceEvent> performanceEvents, string outputPath)
 		{
+			var events = performanceEvents?.SelectMany(CreateMidiEvents).ToArray() ?? throw new ArgumentNullException(nameof(performanceEvents));
+			ExportMidiEvents(events, outputPath);
+		}
+
+		public void ExportCompositeNotes(IEnumerable<CompositeNote> compositeNotes, string outputPath)
+		{
+			var events = CreateMidiEvents(compositeNotes?.ToArray() ?? throw new ArgumentNullException(nameof(compositeNotes))).ToArray();
+			ExportMidiEvents(events, outputPath);
+		}
+
+		private static void ExportMidiEvents(IReadOnlyCollection<MidiNoteEvent> events, string outputPath)
+		{
 			if (string.IsNullOrWhiteSpace(outputPath))
 			{
 				throw new ArgumentException("MIDI output path is required.", nameof(outputPath));
 			}
 
-			var events = performanceEvents?.ToArray() ?? throw new ArgumentNullException(nameof(performanceEvents));
 			var directory = Path.GetDirectoryName(outputPath);
 			if (!string.IsNullOrEmpty(directory))
 			{
@@ -44,20 +55,19 @@ namespace NoteScaler.Services
 			WriteInt16(outputStream, TicksPerQuarterNote);
 		}
 
-		private static void WriteTrack(Stream outputStream, IReadOnlyCollection<GuitarPerformanceEvent> performanceEvents)
+		private static void WriteTrack(Stream outputStream, IReadOnlyCollection<MidiNoteEvent> midiEvents)
 		{
 			using var trackStream = new MemoryStream();
 			WriteTempoEvent(trackStream);
 			WriteProgramChangeEvent(trackStream);
 
-			var midiEvents = performanceEvents
-				.SelectMany(CreateMidiEvents)
+			var orderedMidiEvents = midiEvents
 				.OrderBy(midiEvent => midiEvent.Tick)
 				.ThenBy(midiEvent => midiEvent.IsNoteOn ? 1 : 0)
 				.ToArray();
 
 			var previousTick = 0;
-			foreach (var midiEvent in midiEvents)
+			foreach (var midiEvent in orderedMidiEvents)
 			{
 				WriteVariableLengthQuantity(trackStream, midiEvent.Tick - previousTick);
 				trackStream.WriteByte((byte)(midiEvent.IsNoteOn ? 0x90 + MidiChannel : 0x80 + MidiChannel));
@@ -74,6 +84,27 @@ namespace NoteScaler.Services
 			trackStream.CopyTo(outputStream);
 		}
 
+		private static IEnumerable<MidiNoteEvent> CreateMidiEvents(IEnumerable<CompositeNote> compositeNotes)
+		{
+			var startTick = 0;
+			foreach (var compositeNote in compositeNotes)
+			{
+				var groupEvents = compositeNote.Notes
+					.Where(note => !note.Note.Equals("W", StringComparison.InvariantCultureIgnoreCase))
+					.SelectMany(note => CreateMidiEvents(note, startTick))
+					.ToArray();
+
+				foreach (var midiEvent in groupEvents)
+				{
+					yield return midiEvent;
+				}
+
+				startTick += compositeNote.Notes.Any()
+					? compositeNote.Notes.Max(note => note.Duration)
+					: 0;
+			}
+		}
+
 		private static IEnumerable<MidiNoteEvent> CreateMidiEvents(GuitarPerformanceEvent performanceEvent)
 		{
 			var noteNumber = GetMidiNoteNumber(performanceEvent.Note);
@@ -82,6 +113,15 @@ namespace NoteScaler.Services
 			var endTick = performanceEvent.StartOffsetMilliseconds + performanceEvent.DurationMilliseconds;
 
 			yield return new MidiNoteEvent(startTick, noteNumber, velocity, true);
+			yield return new MidiNoteEvent(endTick, noteNumber, 0, false);
+		}
+
+		private static IEnumerable<MidiNoteEvent> CreateMidiEvents(FrequencyDuration note, int startTick)
+		{
+			var noteNumber = GetMidiNoteNumber($"{note.Note}{note.Octave}");
+			var endTick = startTick + note.Duration;
+
+			yield return new MidiNoteEvent(startTick, noteNumber, DefaultVelocity, true);
 			yield return new MidiNoteEvent(endTick, noteNumber, 0, false);
 		}
 
