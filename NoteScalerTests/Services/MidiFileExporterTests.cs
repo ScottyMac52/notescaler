@@ -3,6 +3,7 @@ namespace NoteScalerTests.Services
 	using NoteScaler.Enums;
 	using NoteScaler.Models;
 	using NoteScaler.Services;
+	using NoteScalerTests.Support;
 	using System;
 	using System.IO;
 	using Xunit;
@@ -104,6 +105,43 @@ namespace NoteScalerTests.Services
 
 			var bytes = File.ReadAllBytes(outputPath);
 			AssertContains(bytes, new byte[] { 0x00, 0x90, 64, 100, 0x00, 0x90, 60, 100, 0x00, 0x90, 55, 100 });
+		}
+
+		[Fact]
+		public void ExportCompositeNotes_WritesSongSequenceNoteEvents()
+		{
+			var outputPath = Path.Combine(testDirectory, "song-sequence.mid");
+			var exporter = new MidiFileExporter();
+			var player = new TestPlayer();
+			var compositeNotes = new[]
+			{
+				new CompositeNote(InstrumentType.Horn, player, new[] { "C4-500" }),
+				new CompositeNote(InstrumentType.Horn, player, new[] { "D4-500" })
+			};
+
+			exporter.ExportCompositeNotes(compositeNotes, outputPath);
+
+			var bytes = File.ReadAllBytes(outputPath);
+			AssertContains(bytes, new byte[] { 0x00, 0x90, 60, 100 });
+			AssertContains(bytes, new byte[] { 0x83, 0x74, 0x80, 60, 0 });
+			AssertContains(bytes, new byte[] { 0x00, 0x90, 62, 100 });
+		}
+
+		[Fact]
+		public void ExportCompositeNotes_WhenChordIsPresent_WritesChordNotesAtSameTick()
+		{
+			var outputPath = Path.Combine(testDirectory, "song-chord.mid");
+			var exporter = new MidiFileExporter();
+			var player = new TestPlayer();
+			var compositeNotes = new[]
+			{
+				new CompositeNote(InstrumentType.Horn, player, new[] { "C4-500", "E4-500", "G4-500" })
+			};
+
+			exporter.ExportCompositeNotes(compositeNotes, outputPath);
+
+			var bytes = File.ReadAllBytes(outputPath);
+			AssertContains(bytes, new byte[] { 0x00, 0x90, 60, 100, 0x00, 0x90, 64, 100, 0x00, 0x90, 67, 100 });
 		}
 
 		[Fact]
