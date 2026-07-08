@@ -82,8 +82,8 @@ namespace NoteScaler.Services
 				playableSequence.PlayableSequenceEvent += PlayableSequence_PlayableSequenceEvent;
 
 				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
-				PlayTabAsRequired(tabName, options.ExportMidi, playableSequence);
-				PlayGtabAsRequired(gtabName, options.ExportMidi, playableSequence);
+				PlayTabAsRequired(tabName, options.ExportMidi, options.DumpTab, playableSequence);
+				PlayGtabAsRequired(gtabName, options.ExportMidi, options.DumpTab, playableSequence);
 				PlaySongAsRequired(key, fileName, options.ExportMidi, playableSequence);
 			}
 			finally
@@ -214,7 +214,7 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlayTabAsRequired(string tabName, string exportMidi, PlayableSequence playableSequence)
+		private void PlayTabAsRequired(string tabName, string exportMidi, bool dumpTab, PlayableSequence playableSequence)
 		{
 			if (!string.IsNullOrEmpty(tabName))
 			{
@@ -225,12 +225,12 @@ namespace NoteScaler.Services
 				}
 				else
 				{
-					PlayTablature(tabs, exportMidi, playableSequence);
+					PlayTablature(tabs, exportMidi, dumpTab, playableSequence);
 				}
 			}
 		}
 
-		private void PlayGtabAsRequired(string gtabName, string exportMidi, PlayableSequence playableSequence)
+		private void PlayGtabAsRequired(string gtabName, string exportMidi, bool dumpTab, PlayableSequence playableSequence)
 		{
 			if (!string.IsNullOrEmpty(gtabName))
 			{
@@ -241,14 +241,15 @@ namespace NoteScaler.Services
 				}
 				else
 				{
-					PlayTablature(tabs, exportMidi, playableSequence);
+					PlayTablature(tabs, exportMidi, dumpTab, playableSequence);
 				}
 			}
 		}
 
-		private void PlayTablature(Tablature tabs, string exportMidi, PlayableSequence playableSequence)
+		private void PlayTablature(Tablature tabs, string exportMidi, bool dumpTab, PlayableSequence playableSequence)
 		{
 			tabs.FixUp();
+			DumpTabAsRequired(dumpTab, tabs);
 			var stringInstrument = CreateStringInstrumentForTab(tabs);
 			if (stringInstrument == null)
 			{
@@ -260,6 +261,14 @@ namespace NoteScaler.Services
 			playableSequence.Repeat = tabs.Repeat;
 			playableSequence.Prepare();
 			playableSequence.Play();
+		}
+
+		private void DumpTabAsRequired(bool dumpTab, Tablature tabs)
+		{
+			if (dumpTab)
+			{
+				consoleOutputService.WriteMessage($"Converted NoteScaler tab: {tabs.TabString}");
+			}
 		}
 
 		private void ExportTabToMidiAsRequired(string exportMidi, IStringInstrument stringInstrument, Tablature tabs, int measureTime)
