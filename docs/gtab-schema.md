@@ -98,7 +98,9 @@ The loader maps known Guitar Tab Maker `stringNotes` arrays to existing NoteScal
 | `D,A,D,G,B,E` | `Drop D` |
 | `D,G,C,F,A,D` | `D Standard` |
 | `D#,G#,C#,F#,A#,D#` | `Eb Standard` |
+| `Eb,Ab,Db,Gb,Bb,Eb` | `Eb Standard` |
 | `C#,F#,B,E,G#,C#` | `C# Standard` |
+| `Db,Gb,B,E,Ab,Db` | `C# Standard` |
 
 Unsupported `stringNotes` arrays return a validation error for now.
 
