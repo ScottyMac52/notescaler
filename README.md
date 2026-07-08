@@ -58,7 +58,7 @@ Play a tab file named `anotherbrickinthewallpart2.json` from the `Tabs` director
  dotnet run --project NoteScaler -- --tab anotherbrickinthewallpart2
 ```
 
-Play a `.gtab` file named `maryhadalittlelamb.gtab` from the `GTabs` directory:
+Play a Guitar Tab Maker `.gtab` file named `maryhadalittlelamb.gtab` from the `GTabs` directory:
 
 ```bash
  dotnet run --project NoteScaler -- --gtab maryhadalittlelamb
@@ -141,21 +141,41 @@ Base instrument names are immutable. If the supplemental file defines a name or 
 
 ## .gtab files
 
-`.gtab` files are JSON documents with a versioned schema. They are loaded from `GTabs` when the command value is a simple file name.
+`.gtab` files are JSON documents produced by Guitar Tab Maker. They are loaded from `GTabs` when the command value is a simple file name.
+
+The first supported shape looks like this:
 
 ```json
 {
-  "schemaVersion": 1,
-  "name": "Mary Had A Little Lamb",
-  "speed": 1500,
-  "tuning": "Standard",
-  "tab": "1-0,2-1,3-0",
-  "repeat": 1,
-  "strings": 6
+  "cFret": 0,
+  "title": "Mary Had A Little Lamb",
+  "tempo": 120,
+  "stringNotes": ["E", "A", "D", "G", "B", "E"],
+  "version": 5,
+  "lyricSize": 100,
+  "tabRows": [
+    {
+      "lyricLines": [],
+      "columnHeaders": [],
+      "columns": [
+        [
+          { "p": "—", "s": "" },
+          { "p": "0", "s": "" },
+          { "p": "—", "s": "" },
+          { "p": "—", "s": "" },
+          { "p": "—", "s": "" },
+          { "p": "—", "s": "" }
+        ]
+      ],
+      "lyrics": ""
+    }
+  ]
 }
 ```
 
-The required fields are `schemaVersion`, `name`, `tuning`, and `tab`. Schema version `1` is the only supported version in this first loader slice.
+The required fields are `title`, `stringNotes`, and `tabRows`. The loader uses numeric `p` values as frets, treats `—` as an empty string cell, ignores non-numeric technique markers in this first slice, and maps known `stringNotes` arrays such as `E,A,D,G,B,E` to existing NoteScaler tunings.
+
+See `docs/gtab-schema.md` for the detailed Guitar Tab Maker adapter notes.
 
 ## MIDI export
 
@@ -194,7 +214,7 @@ The MIDI file contains note-on and note-off events derived from the resolved not
 | `-n` | `--note` | `null` | Displays details for a note and plays its major, minor, and relative minor scales. |
 | `-f` | `--file` | `null` | Plays a JSON song file from the `Songs` directory. Pass the file name without `.json`. |
 | `-t` | `--tab` | `null` | Plays a JSON tab file from the `Tabs` directory. Pass the file name without `.json`. |
-|  | `--gtab` | `null` | Plays a `.gtab` file from the `GTabs` directory or from an explicit path. The `.gtab` extension is optional. |
+|  | `--gtab` | `null` | Plays a Guitar Tab Maker `.gtab` file from the `GTabs` directory or from an explicit path. The `.gtab` extension is optional. |
 |  | `--export-midi` | `null` | Writes a MIDI file when playing a tab, `.gtab`, or song file. |
 
 ## Operation order
@@ -206,7 +226,7 @@ When multiple operation options are supplied, NoteScaler processes them in this 
 3. Create the playable sequence.
 4. Process `--note` if supplied.
 5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog. If `--export-midi` is supplied, a MIDI file is written before tab playback.
-6. Process `--gtab` if supplied. The `.gtab` document is normalized into the existing tablature path. If `--export-midi` is supplied, a MIDI file is written before `.gtab` playback.
+6. Process `--gtab` if supplied. The Guitar Tab Maker `.gtab` document is normalized into the existing tablature path. If `--export-midi` is supplied, a MIDI file is written before `.gtab` playback.
 7. Process `--file` if supplied. If `--export-midi` is supplied, a MIDI file is written before song playback.
 
 That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, `--gtab`, or `--file`.
