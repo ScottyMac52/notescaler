@@ -167,6 +167,20 @@ namespace NoteScalerTests.Services
 			Assert.Contains(harness.Console.Messages, message => message.Contains("Unsupported string instrument: Not A Real Instrument"));
 		}
 
+		[Fact]
+		public void Run_WhenExportMidiIsRequested_WritesMidiFileAndKeepsTabPlayback()
+		{
+			CreateTabFile("runner-midi-tab", "Standard");
+			var outputPath = Path.Combine(testDirectory, "runner-midi-tab.mid");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--tab", "runner-midi-tab", "--export-midi", outputPath });
+
+			Assert.True(File.Exists(outputPath));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Exported MIDI"));
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
 		public void Dispose()
 		{
 			Environment.CurrentDirectory = originalCurrentDirectory;
