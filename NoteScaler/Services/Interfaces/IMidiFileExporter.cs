@@ -6,5 +6,6 @@ namespace NoteScaler.Services.Interfaces
 	public interface IMidiFileExporter
 	{
 		void Export(IEnumerable<GuitarPerformanceEvent> performanceEvents, string outputPath);
+		void ExportCompositeNotes(IEnumerable<CompositeNote> compositeNotes, string outputPath);
 	}
 }

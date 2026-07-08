@@ -181,6 +181,20 @@ namespace NoteScalerTests.Services
 			Assert.True(harness.Player.PlayCount > 0);
 		}
 
+		[Fact]
+		public void Run_WhenExportMidiIsRequestedForSongFile_WritesMidiFileAndKeepsSongPlayback()
+		{
+			CreateSongWithoutKeyCollection("runner-midi-song");
+			var outputPath = Path.Combine(testDirectory, "runner-midi-song.mid");
+			var harness = CreateHarness();
+
+			harness.Runner.Run(new[] { "--file", "runner-midi-song", "--export-midi", outputPath, "--speed", "1500" });
+
+			Assert.True(File.Exists(outputPath));
+			Assert.Contains(harness.Console.Messages, message => message.Contains("Exported MIDI"));
+			Assert.True(harness.Player.PlayCount > 0);
+		}
+
 		public void Dispose()
 		{
 			Environment.CurrentDirectory = originalCurrentDirectory;

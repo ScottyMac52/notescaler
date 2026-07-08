@@ -69,7 +69,7 @@ namespace NoteScaler.Services
 
 				PlayNoteAsRequired(options.Note, options.Octave.GetValueOrDefault(), a4Reference, playableSequence);
 				PlayTabAsRequired(tabName, options.ExportMidi, playableSequence);
-				PlaySongAsRequired(key, fileName, playableSequence);
+				PlaySongAsRequired(key, fileName, options.ExportMidi, playableSequence);
 			}
 			finally
 			{
@@ -172,7 +172,7 @@ namespace NoteScaler.Services
 			}
 		}
 
-		private void PlaySongAsRequired(string key, string fileName, PlayableSequence playableSequence)
+		private void PlaySongAsRequired(string key, string fileName, string exportMidi, PlayableSequence playableSequence)
 		{
 			if (!string.IsNullOrEmpty(fileName))
 			{
@@ -186,6 +186,7 @@ namespace NoteScaler.Services
 					var currentSong = GetTheSongByKeyAsRequired(key, song);
 					playableSequence.ConvertSongNotesToNoteSequence(currentSong);
 					playableSequence.Prepare();
+					ExportSequenceToMidiAsRequired(exportMidi, playableSequence.CompositeNotes);
 					playableSequence.Play();
 
 					if (song.Reverse)
@@ -235,6 +236,24 @@ namespace NoteScaler.Services
 			{
 				var performanceEvents = guitarPerformanceEventFactory.Create(stringInstrument, tabs, measureTime);
 				midiFileExporter.Export(performanceEvents, exportMidi);
+				consoleOutputService.WriteMessage($"Exported MIDI: {exportMidi}");
+			}
+			catch (Exception ex)
+			{
+				consoleOutputService.WriteMessage(ex.Message, ConsoleColor.Red);
+			}
+		}
+
+		private void ExportSequenceToMidiAsRequired(string exportMidi, IEnumerable<CompositeNote> compositeNotes)
+		{
+			if (string.IsNullOrWhiteSpace(exportMidi))
+			{
+				return;
+			}
+
+			try
+			{
+				midiFileExporter.ExportCompositeNotes(compositeNotes, exportMidi);
 				consoleOutputService.WriteMessage($"Exported MIDI: {exportMidi}");
 			}
 			catch (Exception ex)
