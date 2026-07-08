@@ -126,7 +126,7 @@ Empty columns between fretted columns are folded into the previous note group's 
 4-2-2,5-0
 ```
 
-That means the first note group lasts two command-line measure units before the next fretted group starts.
+That means the first note group lasts two command-line measure units before the next fretted group starts. Trailing empty columns after the final fretted column are also folded into that final note group's duration.
 
 ## Loader behavior
 
