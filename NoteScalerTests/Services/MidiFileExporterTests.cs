@@ -35,6 +35,26 @@ namespace NoteScalerTests.Services
 		}
 
 		[Fact]
+		public void Export_WritesGuitarProgramChangeBeforeNoteEvents()
+		{
+			var outputPath = Path.Combine(testDirectory, "guitar-program.mid");
+			var exporter = new MidiFileExporter();
+			var performanceEvents = new[]
+			{
+				new GuitarPerformanceEvent("C4", 1, 0, 0, 500)
+			};
+
+			exporter.Export(performanceEvents, outputPath);
+
+			var bytes = File.ReadAllBytes(outputPath);
+			var programChangeIndex = IndexOf(bytes, new byte[] { 0x00, 0xC0, 24 });
+			var noteOnIndex = IndexOf(bytes, new byte[] { 0x00, 0x90, 60, 100 });
+			Assert.True(programChangeIndex >= 0, "Expected default guitar program change was not found.");
+			Assert.True(noteOnIndex >= 0, "Expected first note-on event was not found.");
+			Assert.True(programChangeIndex < noteOnIndex, "Expected program change to be written before note events.");
+		}
+
+		[Fact]
 		public void Export_WhenSingleEventExists_WritesMatchingNoteOnAndNoteOffEvents()
 		{
 			var outputPath = Path.Combine(testDirectory, "single-note.mid");
@@ -121,6 +141,11 @@ namespace NoteScalerTests.Services
 
 		private static bool ContainsSequence(byte[] bytes, byte[] expectedSequence)
 		{
+			return IndexOf(bytes, expectedSequence) >= 0;
+		}
+
+		private static int IndexOf(byte[] bytes, byte[] expectedSequence)
+		{
 			for (var index = 0; index <= bytes.Length - expectedSequence.Length; index++)
 			{
 				var found = true;
@@ -135,11 +160,11 @@ namespace NoteScalerTests.Services
 
 				if (found)
 				{
-					return true;
+					return index;
 				}
 			}
 
-			return false;
+			return -1;
 		}
 	}
 }

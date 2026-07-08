@@ -14,6 +14,7 @@ namespace NoteScaler.Services
 		private const int MicrosecondsPerQuarterNote = 1000000;
 		private const int MidiChannel = 0;
 		private const int DefaultVelocity = 100;
+		private const int DefaultGuitarProgram = 24;
 
 		public void Export(IEnumerable<GuitarPerformanceEvent> performanceEvents, string outputPath)
 		{
@@ -47,6 +48,7 @@ namespace NoteScaler.Services
 		{
 			using var trackStream = new MemoryStream();
 			WriteTempoEvent(trackStream);
+			WriteProgramChangeEvent(trackStream);
 
 			var midiEvents = performanceEvents
 				.SelectMany(CreateMidiEvents)
@@ -126,6 +128,13 @@ namespace NoteScaler.Services
 			stream.WriteByte((byte)((MicrosecondsPerQuarterNote >> 16) & 0xFF));
 			stream.WriteByte((byte)((MicrosecondsPerQuarterNote >> 8) & 0xFF));
 			stream.WriteByte((byte)(MicrosecondsPerQuarterNote & 0xFF));
+		}
+
+		private static void WriteProgramChangeEvent(Stream stream)
+		{
+			WriteVariableLengthQuantity(stream, 0);
+			stream.WriteByte(0xC0 + MidiChannel);
+			stream.WriteByte(DefaultGuitarProgram);
 		}
 
 		private static void WriteEndOfTrackEvent(Stream stream)
