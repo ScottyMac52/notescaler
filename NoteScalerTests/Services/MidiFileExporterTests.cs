@@ -47,8 +47,8 @@ namespace NoteScalerTests.Services
 			exporter.Export(performanceEvents, outputPath);
 
 			var bytes = File.ReadAllBytes(outputPath);
-			Assert.Contains(new byte[] { 0x90, 60, 87 }, bytes);
-			Assert.Contains(new byte[] { 0x80, 60, 0 }, bytes);
+			AssertContains(bytes, new byte[] { 0x90, 60, 87 });
+			AssertContains(bytes, new byte[] { 0x80, 60, 0 });
 		}
 
 		[Fact]
@@ -64,8 +64,8 @@ namespace NoteScalerTests.Services
 			exporter.Export(performanceEvents, outputPath);
 
 			var bytes = File.ReadAllBytes(outputPath);
-			Assert.Contains(new byte[] { 0x90, 61, 100 }, bytes);
-			Assert.Contains(new byte[] { 0x80, 61, 0 }, bytes);
+			AssertContains(bytes, new byte[] { 0x90, 61, 100 });
+			AssertContains(bytes, new byte[] { 0x80, 61, 0 });
 		}
 
 		[Fact]
@@ -83,7 +83,7 @@ namespace NoteScalerTests.Services
 			exporter.Export(performanceEvents, outputPath);
 
 			var bytes = File.ReadAllBytes(outputPath);
-			Assert.Contains(new byte[] { 0x00, 0x90, 64, 100, 0x00, 0x90, 60, 100, 0x00, 0x90, 55, 100 }, bytes);
+			AssertContains(bytes, new byte[] { 0x00, 0x90, 64, 100, 0x00, 0x90, 60, 100, 0x00, 0x90, 55, 100 });
 		}
 
 		[Fact]
@@ -112,6 +112,34 @@ namespace NoteScalerTests.Services
 		private static string ReadAscii(byte[] bytes, int startIndex, int length)
 		{
 			return System.Text.Encoding.ASCII.GetString(bytes, startIndex, length);
+		}
+
+		private static void AssertContains(byte[] bytes, byte[] expectedSequence)
+		{
+			Assert.True(ContainsSequence(bytes, expectedSequence), $"Expected byte sequence was not found: {BitConverter.ToString(expectedSequence)}");
+		}
+
+		private static bool ContainsSequence(byte[] bytes, byte[] expectedSequence)
+		{
+			for (var index = 0; index <= bytes.Length - expectedSequence.Length; index++)
+			{
+				var found = true;
+				for (var sequenceIndex = 0; sequenceIndex < expectedSequence.Length; sequenceIndex++)
+				{
+					if (bytes[index + sequenceIndex] != expectedSequence[sequenceIndex])
+					{
+						found = false;
+						break;
+					}
+				}
+
+				if (found)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }
