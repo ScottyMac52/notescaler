@@ -153,7 +153,7 @@ namespace NoteScaler.Services
 
 			if (pendingNotes != null)
 			{
-				groups.Add(FormatGroup(pendingNotes, 1));
+				groups.Add(FormatGroup(pendingNotes, durationColumns));
 			}
 
 			return string.Join(",", groups);
