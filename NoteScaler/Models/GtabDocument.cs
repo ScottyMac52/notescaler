@@ -1,28 +1,62 @@
 namespace NoteScaler.Models
 {
 	using Newtonsoft.Json;
+	using System.Collections.Generic;
 
 	public sealed class GtabDocument
 	{
-		[JsonProperty("schemaVersion", Required = Required.Always)]
-		public int SchemaVersion { get; set; }
+		[JsonProperty("cFret")]
+		public int CapoFret { get; set; }
 
-		[JsonProperty("name", Required = Required.Always)]
-		public string Name { get; set; }
+		[JsonProperty("title", Required = Required.Always)]
+		public string Title { get; set; }
 
-		[JsonProperty("speed")]
-		public int Speed { get; set; }
+		[JsonProperty("tempo")]
+		public int Tempo { get; set; }
 
-		[JsonProperty("tuning", Required = Required.Always)]
-		public string Tuning { get; set; }
+		[JsonProperty("stringNotes", Required = Required.Always)]
+		public IEnumerable<string> StringNotes { get; set; }
 
-		[JsonProperty("tab", Required = Required.Always)]
-		public string TabString { get; set; }
+		[JsonProperty("version")]
+		public int Version { get; set; }
 
-		[JsonProperty("repeat")]
-		public int? Repeat { get; set; } = 1;
+		[JsonProperty("lyricSize")]
+		public int LyricSize { get; set; }
 
-		[JsonProperty("strings")]
-		public int NumberOfStrings { get; set; } = 6;
+		[JsonProperty("tabRows", Required = Required.Always)]
+		public IEnumerable<GtabRow> TabRows { get; set; }
+	}
+
+	public sealed class GtabRow
+	{
+		[JsonProperty("lyricLines")]
+		public IEnumerable<string> LyricLines { get; set; }
+
+		[JsonProperty("lyrics")]
+		public string Lyrics { get; set; }
+
+		[JsonProperty("columnHeaders")]
+		public IEnumerable<GtabColumnHeader> ColumnHeaders { get; set; }
+
+		[JsonProperty("columns", Required = Required.Always)]
+		public IEnumerable<IEnumerable<GtabCell>> Columns { get; set; }
+	}
+
+	public sealed class GtabColumnHeader
+	{
+		[JsonProperty("name")]
+		public int Name { get; set; }
+
+		[JsonProperty("strum")]
+		public int Strum { get; set; }
+	}
+
+	public sealed class GtabCell
+	{
+		[JsonProperty("p")]
+		public string Position { get; set; }
+
+		[JsonProperty("s")]
+		public string Style { get; set; }
 	}
 }
