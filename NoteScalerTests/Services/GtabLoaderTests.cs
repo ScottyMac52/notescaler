@@ -21,7 +21,7 @@ namespace NoteScalerTests.Services
 		[Fact]
 		public void Load_WhenValidGuitarTabMakerGtabExistsInGtabDirectory_ReturnsTablature()
 		{
-			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
+			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}],[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]"));
 			var loader = new GtabLoader();
 
 			var result = loader.Load("mary.gtab", out var errorString, out var tablature);
@@ -39,7 +39,7 @@ namespace NoteScalerTests.Services
 		[Fact]
 		public void Load_WhenGtabColumnContainsMultipleFrets_ConvertsColumnToChordGroup()
 		{
-			CreateGtabFile("chord.gtab", CreateGuitarTabMakerGtab("Chord", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
+			CreateGtabFile("chord.gtab", CreateGuitarTabMakerGtab("Chord", 120, "[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"2\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]"));
 			var loader = new GtabLoader();
 
 			var result = loader.Load("chord.gtab", out var errorString, out var tablature);
@@ -51,7 +51,7 @@ namespace NoteScalerTests.Services
 		[Fact]
 		public void Load_WhenExtensionIsOmitted_AddsGtabExtension()
 		{
-			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]]"));
+			CreateGtabFile("mary.gtab", CreateGuitarTabMakerGtab("Mary", 120, "[[{\"p\":\"—\",\"s\":\"\"},{\"p\":\"0\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"},{\"p\":\"—\",\"s\":\"\"}]]"));
 			var loader = new GtabLoader();
 
 			var result = loader.Load("mary", out var errorString, out var tablature);
