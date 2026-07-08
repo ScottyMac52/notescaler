@@ -1,69 +1,130 @@
-# .gtab Schema
+# Guitar Tab Maker .gtab Schema
 
-`.gtab` files are JSON documents used to describe guitar tablature in a small, versioned format.
+`.gtab` files loaded by NoteScaler are JSON documents produced by the Guitar Tab Maker app.
 
-The first supported schema version is `1`.
+The loader adapts the Guitar Tab Maker shape into NoteScaler's existing `Tablature` model so string-instrument resolution, tab playback, guitar performance events, and MIDI export stay DRY.
 
-## Version 1
+## Root shape
 
 ```json
 {
-  "schemaVersion": 1,
-  "name": "Mary Had A Little Lamb",
-  "speed": 1500,
-  "tuning": "Standard",
-  "tab": "1-0,2-1,3-0",
-  "repeat": 1,
-  "strings": 6
+  "cFret": 0,
+  "title": "Unforgiven",
+  "tempo": 80,
+  "stringNotes": ["E", "A", "D", "G", "B", "E"],
+  "version": 5,
+  "lyricSize": 100,
+  "tabRows": []
 }
 ```
 
-## Required fields
+## Supported root fields
 
 | Field | Type | Description |
 |---|---|---|
-| `schemaVersion` | number | Must be `1` for the current loader. |
-| `name` | string | Display name for the tab. |
-| `tuning` | string | String instrument name from the string instrument catalog, such as `Standard`, `Drop D`, or `C# Standard`. |
-| `tab` | string | Existing NoteScaler tab notation. |
+| `cFret` | number | Capo fret. The loader adds this value to parsed fret numbers when converting to NoteScaler tab notation. |
+| `title` | string | Song or tab title. Maps to `Tablature.Name`. |
+| `tempo` | number | Beats per minute from Guitar Tab Maker. The loader stores an approximate measure time as `60000 / tempo`. |
+| `stringNotes` | string array | Open string notes in low-to-high order, for example `E,A,D,G,B,E`. |
+| `version` | number | Guitar Tab Maker document version. The first observed sample uses version `5`. |
+| `lyricSize` | number | Preserved app metadata. Not used by NoteScaler playback in this slice. |
+| `tabRows` | array | Visual tab rows containing columns and optional lyric data. |
 
-## Optional fields
+## Row shape
 
-| Field | Type | Default | Description |
-|---|---|---:|---|
-| `speed` | number | `0` | Measure duration in milliseconds. The command-line `--speed` value still controls the playable sequence measure time in the first loader slice. |
-| `repeat` | number | `1` | Number of playback repeats. |
-| `strings` | number | `6` | Number of strings for informational compatibility with existing tab documents. |
+Each `tabRows` entry can contain:
 
-## Tab notation
-
-The `tab` field uses existing NoteScaler tab notation.
-
-Single fretted note:
-
-```text
-1-0
+```json
+{
+  "lyricLines": [],
+  "columnHeaders": [
+    { "name": -1, "strum": -1 }
+  ],
+  "columns": [],
+  "lyrics": ""
+}
 ```
 
-Comma-separated groups advance time sequentially:
+The first loader slice uses `columns` for playback conversion. `lyricLines`, `columnHeaders`, and `lyrics` are recognized as part of the file shape but are not used for playback yet.
 
-```text
-1-0,2-1,3-0
+## Column and cell shape
+
+Each row has multiple columns. Each column contains one cell per string.
+
+```json
+[
+  { "p": "—", "s": "" },
+  { "p": "0", "s": "" },
+  { "p": "—", "s": "" },
+  { "p": "—", "s": "" },
+  { "p": "—", "s": "" },
+  { "p": "—", "s": "" }
+]
 ```
 
-Pipe-separated values form a chord group at the same start offset:
+Cell fields:
 
-```text
-1-0|2-1|3-0
+| Field | Type | Description |
+|---|---|---|
+| `p` | string | Position value. Numeric values are frets. `—` means no fretted note in that string cell. Non-numeric technique markers are ignored in this first slice. |
+| `s` | string | Style or decoration metadata. Not used by NoteScaler playback in this slice. |
+
+## String ordering
+
+Guitar Tab Maker stores `stringNotes` in low-to-high order. For standard tuning:
+
+```json
+["E", "A", "D", "G", "B", "E"]
 ```
 
-Duration modifiers use the existing measure-time multiplier:
+NoteScaler's string instrument catalog uses normal string numbers where string `1` is the highest string. Therefore, the loader converts a cell index into a NoteScaler string number by reversing the index:
 
 ```text
-1-0-0.5
+index 0 -> string 6
+index 1 -> string 5
+index 2 -> string 4
+index 3 -> string 3
+index 4 -> string 2
+index 5 -> string 1
 ```
 
-With a measure time of `1000`, that note lasts `500` milliseconds.
+## Supported tunings in this first slice
+
+The loader maps known Guitar Tab Maker `stringNotes` arrays to existing NoteScaler catalog names:
+
+| Guitar Tab Maker `stringNotes` | NoteScaler tuning |
+|---|---|
+| `E,A,D,G,B,E` | `Standard` |
+| `D,A,D,G,B,E` | `Drop D` |
+| `D,G,C,F,A,D` | `D Standard` |
+| `D#,G#,C#,F#,A#,D#` | `Eb Standard` |
+| `C#,F#,B,E,G#,C#` | `C# Standard` |
+
+Unsupported `stringNotes` arrays return a validation error for now.
+
+## Conversion behavior
+
+The loader converts each Guitar Tab Maker column into existing NoteScaler tab notation.
+
+A single fretted cell becomes one NoteScaler tab item:
+
+```text
+4-2
+```
+
+Multiple fretted cells in the same column become a chord group:
+
+```text
+5-0|4-2
+```
+
+Empty columns between fretted columns are folded into the previous note group's duration multiplier:
+
+```text
+4-2-2,5-0
+```
+
+That means the first note group lasts two command-line measure units before the next fretted group starts.
 
 ## Loader behavior
 
@@ -82,3 +143,10 @@ An explicit path is honored:
 ```
 
 After loading, the `.gtab` document is normalized into the existing `Tablature` playback path so tab playback and MIDI export stay DRY.
+
+## Current limitations
+
+- Lyrics are parsed as part of the document shape but not used for playback.
+- Style metadata is ignored.
+- Non-numeric markers such as hammer-on markers are ignored in this first loader slice.
+- Unsupported tunings need a follow-up mapping or a generated supplemental instrument definition.
