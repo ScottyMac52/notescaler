@@ -58,6 +58,12 @@ Play a tab whose JSON file references an instrument by name:
  dotnet run --project NoteScaler -- --tab my-seven-string-tab
 ```
 
+Play a tab and export the same guitar performance events to a MIDI file:
+
+```bash
+ dotnet run --project NoteScaler -- --tab my-seven-string-tab --export-midi my-seven-string-tab.mid
+```
+
 Pause before playback, then play using a different instrument voice:
 
 ```bash
@@ -115,6 +121,18 @@ Supplemental instruments use this JSON shape:
 
 Base instrument names are immutable. If the supplemental file defines a name or alias that already exists in the embedded base catalog, the embedded base definition wins.
 
+## MIDI export
+
+MIDI export is file-based. It does not require a MIDI-capable guitar amp.
+
+When `--export-midi` is supplied with `--tab`, NoteScaler writes a standard `.mid` file from the guitar performance events and then continues normal tab playback.
+
+```bash
+ dotnet run --project NoteScaler -- --tab anotherbrickinthewallpart2 --export-midi anotherbrickinthewallpart2.mid
+```
+
+The MIDI file contains note-on and note-off events derived from the resolved tab string, fret, note, start offset, duration, velocity, and articulation metadata.
+
 ## Command-line options
 
 | Short | Long | Default | Description |
@@ -128,6 +146,7 @@ Base instrument names are immutable. If the supplemental file defines a name or 
 | `-n` | `--note` | `null` | Displays details for a note and plays its major, minor, and relative minor scales. |
 | `-f` | `--file` | `null` | Plays a JSON song file from the `Songs` directory. Pass the file name without `.json`. |
 | `-t` | `--tab` | `null` | Plays a JSON tab file from the `Tabs` directory. Pass the file name without `.json`. |
+|  | `--export-midi` | `null` | Writes a MIDI file when playing a tab. |
 
 ## Operation order
 
@@ -137,7 +156,7 @@ When multiple operation options are supplied, NoteScaler processes them in this 
 2. Apply `--prewait` if configured.
 3. Create the playable sequence.
 4. Process `--note` if supplied.
-5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog.
+5. Process `--tab` if supplied. The tab `tuning` value is resolved from the embedded base catalog plus the editable supplemental catalog. If `--export-midi` is supplied, a MIDI file is written before tab playback.
 6. Process `--file` if supplied.
 
 That means a command can technically include more than one operation option, but the clearest usage is to run one primary operation at a time: `--note`, `--tab`, or `--file`.
@@ -168,19 +187,22 @@ flowchart TD
     O --> P{Tab loaded?}
     P -->|Yes| Q[Apply tab defaults and tuning]
     Q --> R[Resolve string instrument from JSON catalogs]
-    R --> S[Convert tab frets to notes]
-    S --> T[Prepare and play tab sequence]
-    P -->|No| U[Write tab load error]
-    N -->|No| V{--file supplied?}
-    T --> V
-    U --> V
+    R --> S{--export-midi supplied?}
+    S -->|Yes| T[Write MIDI file]
+    S -->|No| U[Convert tab frets to notes]
+    T --> U
+    U --> V[Prepare and play tab sequence]
+    P -->|No| W[Write tab load error]
+    N -->|No| X{--file supplied?}
+    V --> X
+    W --> X
 
-    V -->|Yes| W[Load song file from Songs]
-    W --> X{Song loaded?}
-    X -->|Yes| Y[Select requested/default key]
-    Y --> AA[Prepare and play song sequence]
-    X -->|No| AB[Write song load error]
-    V -->|No| Z[Exit]
-    AA --> Z
-    AB --> Z
+    X -->|Yes| Y[Load song file from Songs]
+    Y --> AA{Song loaded?}
+    AA -->|Yes| AB[Select requested/default key]
+    AB --> AC[Prepare and play song sequence]
+    AA -->|No| AD[Write song load error]
+    X -->|No| Z[Exit]
+    AC --> Z
+    AD --> Z
 ```
